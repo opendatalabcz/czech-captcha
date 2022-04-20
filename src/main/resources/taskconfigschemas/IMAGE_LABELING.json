@@ -1,0 +1,28 @@
+{
+  "title": "Task setup",
+  "type": "object",
+  "required": [
+    "labelGroup",
+    "tags"
+  ],
+  "properties": {
+    "labelGroup": {
+      "type": "string",
+      "title": "Label group",
+      "description": "Select which collection of labels is going to be used in the task; List of all label group can be found on the image service UI"
+    },
+    "tags": {
+      "type": "array",
+      "title": "Image tag",
+      "items": {
+        "type": "string"
+      },
+      "description": "Use only images with these tags only, image has to contain all the tags (logical AND)"
+    },
+    "owner": {
+      "type": "string",
+      "title": "Image owner",
+      "description": "Optional - Use only images from specified owner"
+    }
+  }
+}
