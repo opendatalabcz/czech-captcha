@@ -2,16 +2,18 @@
 
 The main purpose of this CAPTCHA application is to provide CAPTCHA as a service to secure websites from malicious bots.
 
-This CAPTCHA is also a platform for user collaboration. It enables its users to add data, which are then used for the CAPTCHA. Further the platform makes it possible utilize the human computing from the CAPTCHA verification. 
+One of the problems with CAPTCHAs is that they are annoying their users and take valuable time from them.
+The goal was to create CAPTCHA application, which would allow the website providers to set up the CAPTCHA in a way, that it is design specifically for their customers, to make the CAPTCHA as painless as possible.
+Another goal of this application was to utilize the valuable effort spent by solving the CAPTCHA challenges and to allow website providers use this human computing power of their customers for creating a value.
 
-The CAPTCHA **service users**, choose their CAPTCHA type and then for this type, they can also choose their specific configuration for this CAPTCHA type.
-The CAPTCHA **providers** can easily add new verification methods for their service users.
+This application provides CAPTCHA as service and was implemented in a way that one deployment can serve multiple different website providers. The website providers are able to choose from different types of verification methods, which can be simply added by the CAPTCHA providers, due to devised architecture. Further the CAPTCHA service users are able to configure each verification method to their specific needs. Depending on the given verification method, the CAPTCHA service users can use their own data like images. Further the users are able to utilize the human computing of their users with the help of services, which enable verification methods to leverage this power. These services include labeling mechanism or memory, where each verification method can store its data for every file object.
 
 ## Verification methods
 
-There are currently two default CAPTCHA verification methods: text-base and image-based selection CAPTCHA.
+All the described system properties are demonstrated on an implementation of two default verification methods.
+First method is simple well known **text-based CAPTCHA**, where users have to recognize type randomly generated text that is then distorted and presented as an image.
 
-The image based CAPTCHA uses human computation to label images.
+The second implemented verification method is **image-based selection CAPTCHA**, where users are presented with set of images and need to select those with a property specified in the task description. On the second verification method we demonstrate the application's ability to utilize human computing.
 
 ## Example usage
 To better understand how this application is used, we will demonstrate its usage on an example:
