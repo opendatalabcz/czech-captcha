@@ -12,6 +12,8 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import javax.imageio.ImageIO
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 
 @Component("TEXT")
@@ -43,7 +45,7 @@ object TextTemplate: TaskTemplate {
 
     private fun toMaskedImage(text: String): String {
         val format = "png"
-        val font = Font("Arial", Font.PLAIN, 48)
+        val font = Font("Courier", Font.PLAIN, 48)
 
         val (width, height) = getImageDimensions(text, font)
 
@@ -57,7 +59,7 @@ object TextTemplate: TaskTemplate {
 
     private fun drawImage(text: String, img: BufferedImage, font: Font) {
         drawDrawText(text, img, font)
-        drawOval(img)
+        drawLine(img)
     }
 
     private fun printImage(img: BufferedImage): ByteArrayOutputStream {
@@ -87,7 +89,7 @@ object TextTemplate: TaskTemplate {
         g2d.translate(x, baselineY)
         g2d.translate(Random.nextInt(-5, 5), Random.nextInt(-5, 5))
 
-        setGrapics(g2d, font)
+        setGraphics(g2d, font)
 
         g2d.color = Color.BLACK
         val minRotation = 0.05
@@ -105,7 +107,7 @@ object TextTemplate: TaskTemplate {
     }
 
 
-    private fun setGrapics(g2d: Graphics2D, font: Font) {
+    private fun setGraphics(g2d: Graphics2D, font: Font) {
         g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY)
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY)
@@ -119,7 +121,7 @@ object TextTemplate: TaskTemplate {
 
     private fun drawDrawText(text: String, img: BufferedImage, font: Font) {
         val g2d = img.createGraphics()
-        setGrapics(g2d, font)
+        setGraphics(g2d, font)
         val baselineY = g2d.fontMetrics.ascent + 10
 
         text.forEachIndexed { index, char ->
@@ -130,13 +132,32 @@ object TextTemplate: TaskTemplate {
         g2d.dispose()
     }
 
-    private fun drawOval(img: BufferedImage) {
-        val heightAdjustment = Random.nextInt(-5, 5)
+    private fun drawLine(img: BufferedImage) {
         val g2d = img.createGraphics()
         g2d.color = Color.BLACK
-        val stroke =  BasicStroke(4f)
-        g2d.setStroke(stroke)
-        g2d.drawOval(5, img.height/3 + heightAdjustment, img.width - 5, img.height / 3 + heightAdjustment)
+        g2d.stroke = BasicStroke(4f)
+
+        val maxX = 3 * img.height / 4
+        val minX = img.height / 4
+
+        var previousY = Random.nextInt(minX, maxX)
+
+        val withDivider = 10
+
+        val coordinates = (1 .. (img.width / withDivider - 1)).map { x ->
+            val shift = Random.nextInt(minX/2, minX) * (if (Random.nextBoolean()) -1 else 1)
+            val newY = previousY + shift
+            val y = min(max(minX, newY), maxX)
+
+            previousY = y
+
+            Pair(x * withDivider, y)
+        }
+
+        val xPoints = coordinates.map { (x, _)  -> x }.toIntArray()
+        val yPoints = coordinates.map { (_, y)  -> y }.toIntArray()
+        g2d.drawPolyline(xPoints, yPoints, coordinates.size)
+
         g2d.dispose()
     }
 }
