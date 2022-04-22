@@ -12,15 +12,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import kotlin.random.Random
 
 @Service("IMAGE_LABELING")
 class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
                             val objectMapper: ObjectMapper,
                             val objectService: ObjectService
 ): TaskTemplate {
-    override fun generateTask(generationConfig: JsonNode, userName: String): Triple<Description, TaskData, AnswerSheet> {
+    override fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         val config = objectMapper.treeToValue(generationConfig, ImageLabelingGenerationConfig::class.java)
-        val filteredImages = config.owner?.let { objectMetadataService.getFiltered(userName, config.tags, it, ObjectTypeEnum.IMAGE) } ?: objectMetadataService.getFiltered(userName, config.tags)
+        val filteredImages = objectMetadataService.getFiltered(currentUser, config.tags, config.owners, ObjectTypeEnum.IMAGE)
         val labelGroupName = config.labelGroup
         val labelGroup = objectMetadataService.getLimitedLabelGroup(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "LabelGroup not found: $labelGroupName")
         val chosenLabel = labelGroup.labelRange.random()
@@ -51,15 +52,21 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
     }
 
     private fun selectImages(objects: List<ObjectMetadata>, labelGroupName: String, label: Label): List<Pair<ObjectMetadata, ExpectedResult>> {
-        val withLabel = objectMetadataService.getRandomWithLabel(objects, labelGroupName, label, 2)
-        val withoutLabel = objectMetadataService.getRandomWithoutLabel(objects, labelGroupName, label, 2)
-        val unknownLabel = objectMetadataService.getRandomNotKnowingLabel(objects, labelGroupName, label, 2)
+        val totalImagesCount = 12
+        val unknownLabelCount = 2
+        val minWithLabel = 2
+        val withLabelCount = Random.nextInt(minWithLabel, totalImagesCount - unknownLabelCount - minWithLabel + 1)
+        val withoutLabelCount = totalImagesCount - unknownLabelCount - withLabelCount
 
-        val chosenImages = ArrayList<Pair<ObjectMetadata, ExpectedResult>>(6)
-        chosenImages.addAll(withLabel.map{ Pair(it, ExpectedResult.CORRECT)})
-        chosenImages.addAll(withoutLabel.map{ Pair(it, ExpectedResult.INCORRECT)})
-        chosenImages.addAll(unknownLabel.map{ Pair(it, ExpectedResult.UNKNOWN)})
-        // todo create mapping
+        val withLabel = objectMetadataService.getRandomWithLabel(objects, labelGroupName, label, withLabelCount)
+        val withoutLabel = objectMetadataService.getRandomWithoutLabel(objects, labelGroupName, label, withoutLabelCount)
+        val unknownLabel = objectMetadataService.getRandomNotKnowingLabel(objects, labelGroupName, label, unknownLabelCount)
+
+        val chosenImages = ArrayList<Pair<ObjectMetadata, ExpectedResult>>(totalImagesCount)
+        chosenImages.addAll(withLabel.map { Pair(it, ExpectedResult.CORRECT) } )
+        chosenImages.addAll(withoutLabel.map { Pair(it, ExpectedResult.INCORRECT) } )
+        chosenImages.addAll(unknownLabel.map { Pair(it, ExpectedResult.UNKNOWN) } )
+
         chosenImages.shuffle()
 
         return chosenImages
@@ -77,7 +84,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
         }
     }
 
-    fun evaluateAnswer(answer: TextListAnswer, expectedResults: List<Pair<Long, ExpectedResult>>): Float {
+    fun evaluateAnswer(answer: TextListAnswer, expectedResults: List<Pair<Long, ExpectedResult>>): Double {
         val verifyingResultsSize = expectedResults.filter { it.second != ExpectedResult.UNKNOWN}.size
         val correctAnswers = expectedResults.withIndex().count { (index, value) ->
             val (_, expectedResult) = value
@@ -87,7 +94,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
             evaluateUserAnswer(userAnswer, expectedResult)
         }
 
-        return correctAnswers.toFloat() / verifyingResultsSize
+        return correctAnswers.toDouble() / verifyingResultsSize
     }
 
     fun evaluateUserAnswer(userAnswer: Boolean, expectedAnswer: ExpectedResult): Boolean {
@@ -112,4 +119,4 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
     }
 }
 
-data class ImageLabelingGenerationConfig(val labelGroup: String, val tags: List<String>, val owner: String?)
+data class ImageLabelingGenerationConfig(val labelGroup: String, val tags: List<String>, val owners: List<String>)

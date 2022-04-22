@@ -15,7 +15,7 @@ import kotlin.streams.toList
 
 interface TaskTemplate {
     // Description, TaskData
-    fun generateTask(generationConfig: JsonNode, userName: String): Triple<Description, TaskData, AnswerSheet>
+    fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet>
     fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult
 }
 

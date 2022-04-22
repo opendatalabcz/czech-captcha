@@ -19,10 +19,10 @@
       },
       "description": "Use only images with these tags only, image has to contain all the tags (logical AND)"
     },
-    "owner": {
+    "owners": {
       "type": "string",
-      "title": "Image owner",
-      "description": "Optional - Use only images from specified owner"
+      "title": "Image owners",
+      "description": "Use only images from specified owners. Conjunction of images owned by one of the owners (logical OR)"
     }
   }
 }

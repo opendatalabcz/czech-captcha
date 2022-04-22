@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
 @Service
-class ObjectMetadataService(val objectMetadataRepo: ObjectMetadataRepository,
-                            val objectService: ObjectService) {
+class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataRepository,
+                            private val objectService: ObjectService) {
     fun getAll(): List<ObjectMetadata> {
         return objectMetadataRepo.getAll()
     }
@@ -23,22 +23,16 @@ class ObjectMetadataService(val objectMetadataRepo: ObjectMetadataRepository,
         return objectMetadataRepo.getLabelGroups()
     }
 
-    fun getAllAccessible(user: String): List<ObjectMetadata> {
-        val images = objectMetadataRepo.getAll()
-
-        return images.filter { !it.tags.contains("private") || it.user == user }
+    fun getAllAccessible(currentUser: String): List<ObjectMetadata> {
+        return getAll().filter { !it.tags.contains("private") || it.user == currentUser }
     }
 
-    fun getFiltered(user: String, tags: List<String>): List<ObjectMetadata> {
-        return getAllAccessible(user).filter { it.tags.containsAll(tags) }
+    fun getFiltered(currentUser: String, tags: List<String>, owners: List<String>): List<ObjectMetadata> {
+        return getAllAccessible(currentUser).filter { owners.contains(it.user)  && it.tags.containsAll(tags) }
     }
 
-    fun getFiltered(user: String, tags: List<String>, owner: String): List<ObjectMetadata> {
-        return getFiltered(user, tags).filter { it.user == owner }
-    }
-
-    fun getFiltered(user: String, tags: List<String>, owner: String, objectType: ObjectTypeEnum): List<ObjectMetadata> {
-        return getFiltered(user, tags, owner).filter { it.objectType.type() == objectType }
+    fun getFiltered(currentUser: String, tags: List<String>, owners: List<String>, objectType: ObjectTypeEnum): List<ObjectMetadata> {
+        return getFiltered(currentUser, tags, owners).filter { it.objectType.type() == objectType }
     }
 
     fun getRandomWithLabel(objects: List<ObjectMetadata>, labelGroup: String, label: Label, count: Int): List<ObjectMetadata> {

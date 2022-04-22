@@ -18,7 +18,7 @@ import kotlin.random.Random
 
 @Component("TEXT")
 object TextTemplate: TaskTemplate {
-    override fun generateTask(generationConfig: JsonNode, userName: String): Triple<Description, TaskData, AnswerSheet> {
+    override fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         val description = Description("Type the text")
         val textToType = generateRandomText(5, 8)
         val data = TextData(textToType)
@@ -31,8 +31,15 @@ object TextTemplate: TaskTemplate {
 
     override fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult {
         val textAnswer = (answer as TextAnswer).text
-        val correctAnswer = (taskData as TextData).text
-        return if (correctAnswer == textAnswer) EvaluationResult(1F) else EvaluationResult(0F)
+        val expectedAnswer = (taskData as TextData).text
+
+        return evaluate(textAnswer, expectedAnswer)
+    }
+
+    private fun evaluate(guessed: String, expected: String): EvaluationResult {
+        val correctlyGuessed = guessed.zip(expected).filter { (guessed, expected) -> guessed == expected }.size
+
+        return EvaluationResult(correctlyGuessed.toDouble() / expected.length)
     }
 
     private fun generateRandomText(minLength: Int, maxLength: Int): String {

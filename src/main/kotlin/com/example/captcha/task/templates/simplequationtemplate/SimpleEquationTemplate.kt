@@ -9,7 +9,7 @@ import kotlin.random.Random
 
 @Component("NUMERIC_EQUATION")
 object SimpleEquationTemplate: TaskTemplate {
-    override fun generateTask(generationConfig: JsonNode, userName: String): Triple<Description, TaskData, AnswerSheet> {
+    override fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         // todo generate equation...
         val firstDigit = generateDigit()
         val secondDigit = generateDigit()
@@ -23,7 +23,7 @@ object SimpleEquationTemplate: TaskTemplate {
     override fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult {
         val textAnswer = (answer as TextAnswer).text
         val correctAnswer = (taskData as TextData).text
-        return if (correctAnswer == textAnswer) EvaluationResult(1F) else EvaluationResult(0F)
+        return if (correctAnswer == textAnswer) EvaluationResult(1.0) else EvaluationResult(0.0)
     }
 
     private fun generateDigit(): Int {
