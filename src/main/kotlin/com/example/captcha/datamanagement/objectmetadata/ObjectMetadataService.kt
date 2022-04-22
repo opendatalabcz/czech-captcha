@@ -119,7 +119,7 @@ class ObjectMetadataService(val objectMetadataRepo: ObjectMetadataRepository,
             val labelGroup =  objectMetadataRepo.getLabelGroupByName(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group name  with name $labelGroupName does not exist")
             Labeling(labels.map { labelValue ->
                 val label = Label(labelValue)
-                if (labelGroup.rangeContainsLabel(label))
+                if (!labelGroup.rangeContainsLabel(label))
                     throw throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label $labelValue does not belong to labelgroup $labelGroup range")
                 label
             })

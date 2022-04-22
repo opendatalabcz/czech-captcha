@@ -100,8 +100,10 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
 
     fun labelUnknown(expectedResults: List<Pair<Long, ExpectedResult>>, label: Label, labelGroupName: String, answer: TextListAnswer) {
         expectedResults.withIndex().forEach { (index, result) ->
-                val (objectId, _) = result
-                objectMetadataService.labelObject(objectId, labelGroupName, label, answer.texts.contains(index.toString()))
+                val (objectId, expectedResult) = result
+                if (expectedResult == ExpectedResult.UNKNOWN) {
+                    objectMetadataService.labelObject(objectId, labelGroupName, label, answer.texts.contains(index.toString()))
+                }
             }
     }
 
