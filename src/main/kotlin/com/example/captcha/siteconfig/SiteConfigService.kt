@@ -5,8 +5,6 @@ import com.example.captcha.task.taskconfig.TaskConfigService
 import com.example.captcha.task.templates.ATaskType
 import com.example.captcha.task.templates.EmptyGenerationConfig
 import com.example.captcha.task.templates.GenerationConfig
-import com.example.captcha.task.templates.ImageLabelingGenerationConfig
-import com.example.captcha.verification.entities.TaskType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import net.pwall.json.schema.JSONSchema
@@ -51,18 +49,18 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
         return TaskConfig(taskConfigDTO.taskType, generationConfig, taskConfigDTO.evaluationThreshold)
     }
 
-    private fun fromGenerationConfigJSON(json: JsonNode, taskType: TaskType): GenerationConfig {
+    private fun fromGenerationConfigJSON(json: JsonNode, taskType: String): GenerationConfig {
         // Get GenerationConfig data class for the task type
         val generationConfigClass = GenerationConfig::class.sealedSubclasses
             .filter { it.hasAnnotation<ATaskType>() }
-            .find { it.findAnnotation<ATaskType>()?.name == taskType.name }
+            .find { it.findAnnotation<ATaskType>()?.name == taskType }
 
         return generationConfigClass?.let { genConfigClass -> objectMapper.treeToValue(json, genConfigClass.java) }
-            ?: EmptyGenerationConfig
+            ?: EmptyGenerationConfig()
     }
 
     private fun validateTaskConfig(taskConfig: TaskConfigDTO) {
-        val schema = taskConfigService.getTaskConfigSchema(taskConfig.taskType.name)
+        val schema = taskConfigService.getTaskConfigSchema(taskConfig.taskType)
 
         val validator = JSONSchema.parse(schema.toString())
 

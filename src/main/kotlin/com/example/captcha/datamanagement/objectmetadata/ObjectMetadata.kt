@@ -1,6 +1,5 @@
 package com.example.captcha.datamanagement.objectmetadata
 
-import com.example.captcha.verification.entities.TaskType
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
@@ -8,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 // labels ... <labelGroupName, Lableling>
 data class ObjectMetadata(val objectId: Long, val user: String, val objectType: ObjectType, val labels: MutableMap<String,Labeling>,
-                          val taskData: Map<TaskType, OtherMetadataType>, val tags: List<String>) {
+                          val taskData: Map<String, OtherMetadataType>, val tags: List<String>) {
     constructor(objectId: Long, user: String, objectType: ObjectType): this(objectId, user, objectType, mutableMapOf())
     constructor(objectId: Long, user: String, objectType: ObjectType, labelGroup: Pair<String, Labeling>): this(objectId, user, objectType, mutableMapOf(labelGroup))
     constructor(objectId: Long, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>): this(objectId, user, objectType, labelGroups, emptyList())

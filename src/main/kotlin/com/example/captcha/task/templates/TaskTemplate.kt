@@ -22,26 +22,26 @@ interface TaskTemplate {
 @Service
 class TaskTemplateRouter(val context: ApplicationContext) {
 
-    lateinit var templates:Map<TaskType, TaskTemplate>
+    lateinit var templates:Map<String, TaskTemplate>
 
     @EventListener(ApplicationReadyEvent::class)
     fun initializeAfterStartup() {
-        templates = context.getBeansOfType(TaskTemplate::class.java).mapKeys { (key, _) -> TaskType(key) }
+        templates = context.getBeansOfType(TaskTemplate::class.java)
     }
 
-    fun generateTask(taskType: TaskType, userName: String, generationConfig: GenerationConfig): Triple<Description, TaskData, AnswerSheet> {
+    fun generateTask(taskType: String, userName: String, generationConfig: GenerationConfig): Triple<Description, TaskData, AnswerSheet> {
         return getTemplate(taskType).generateTask(generationConfig, userName)
     }
 
-    fun evaluateTask(taskType: TaskType, taskData: TaskData, answer: Answer): EvaluationResult {
+    fun evaluateTask(taskType: String, taskData: TaskData, answer: Answer): EvaluationResult {
         return getTemplate(taskType).evaluateTask(taskData, answer)
     }
 
-    private fun getTemplate(taskType: TaskType): TaskTemplate {
+    private fun getTemplate(taskType: String): TaskTemplate {
         return templates[taskType] ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Template with given task name is not implemented")
     }
 
-    fun getTaskTypes(): List<TaskType> {
+    fun getTaskTypes(): List<String> {
         return templates.keys.stream().toList()
     }
 }

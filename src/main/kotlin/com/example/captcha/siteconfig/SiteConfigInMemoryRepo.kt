@@ -2,10 +2,7 @@ package com.example.captcha.siteconfig
 
 import com.example.captcha.task.templates.EmptyGenerationConfig
 import com.example.captcha.task.templates.ImageLabelingGenerationConfig
-import com.example.captcha.verification.entities.TaskType
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.ObjectNode
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
@@ -16,7 +13,7 @@ class SiteConfigInMemoryRepo(val objectMapper: ObjectMapper) : SiteConfigReposit
     fun initializeAfterStartup() {
 //        val generationConfig = objectMapper.readTree("""{"labelGroup":"animals","tags":[]}""")
         val generationConfig = ImageLabelingGenerationConfig("animals", emptyList(), emptyList())
-        val verificationConfig = TaskConfig(TaskType("IMAGE_LABELING"), generationConfig, 0.75)
+        val verificationConfig = TaskConfig("IMAGE_LABELING", generationConfig, 0.75)
         val imageLabelingConfig = SiteConfig("siteKey3", "secretKey3", "user1", verificationConfig)
 
         add(imageLabelingConfig)
@@ -24,19 +21,19 @@ class SiteConfigInMemoryRepo(val objectMapper: ObjectMapper) : SiteConfigReposit
 
     val repo = mutableListOf(
         SiteConfig("siteKey", "secretKey", "user1", TaskConfig(
-            TaskType("NUMERIC_EQUATION"),
-            EmptyGenerationConfig,
+            "NUMERIC_EQUATION",
+            EmptyGenerationConfig(),
             0.75
         )),
         SiteConfig("siteKey2", "secretKey2", "user1", TaskConfig(
-            TaskType("SIMPLE_IMAGE"),
-            EmptyGenerationConfig,
+            "SIMPLE_IMAGE",
+            EmptyGenerationConfig(),
             0.75
         )),
 //        SiteConfig("siteKey3", "secretKey3", "username", VerificationConfig(TaskType("IMAGE_LABELING"), ObjectNode(JsonNodeFactory.instance))),
         SiteConfig("siteKey4", "secretKey4", "user1", TaskConfig(
-            TaskType("TEXT"),
-            EmptyGenerationConfig,
+            "TEXT",
+            EmptyGenerationConfig(),
             0.75
         ))
     )

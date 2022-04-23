@@ -1,11 +1,14 @@
 package com.example.captcha.siteconfig
 
 import com.example.captcha.task.templates.GenerationConfig
-import com.example.captcha.verification.entities.TaskType
 import com.fasterxml.jackson.databind.JsonNode
+import org.bson.types.ObjectId
+import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.Document
 
-data class SiteConfig(val siteKey: String, val secretKey: String, val userName: String, val taskConfig: TaskConfig)
+@Document("siteconfig")
+data class SiteConfig(val siteKey: String, val secretKey: String, val userName: String, val taskConfig: TaskConfig, @Id val id: ObjectId = ObjectId.get())
 
-data class TaskConfig(val taskType: TaskType, val generationConfig: GenerationConfig, val evaluationThreshold: Double)
+class TaskConfig(val taskType: String, val generationConfig: GenerationConfig, val evaluationThreshold: Double)
 
-data class TaskConfigDTO(val taskType: TaskType, val generationConfig: JsonNode, val evaluationThreshold: Double)
+data class TaskConfigDTO(val taskType: String, val generationConfig: JsonNode, val evaluationThreshold: Double)
