@@ -18,7 +18,7 @@ class SiteConfigController(val siteConfigService: SiteConfigService) {
     }
 
     @PostMapping
-    fun createSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody taskConfig: TaskConfig): SiteConfigCreated {
+    fun createSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody taskConfig: TaskConfigDTO): SiteConfigCreated {
         val newConfig = siteConfigService.create(user.username, taskConfig)
         return SiteConfigCreated.fromEntity(newConfig)
     }

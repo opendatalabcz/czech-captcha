@@ -1,15 +1,15 @@
 package com.example.captcha.task.templates.simplequationtemplate
 
+import com.example.captcha.task.templates.GenerationConfig
 import com.example.captcha.verification.*
 import com.example.captcha.verification.entities.*
 import com.example.captcha.task.templates.TaskTemplate
-import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.stereotype.Component
 import kotlin.random.Random
 
 @Component("NUMERIC_EQUATION")
 object SimpleEquationTemplate: TaskTemplate {
-    override fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
+    override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         // todo generate equation...
         val firstDigit = generateDigit()
         val secondDigit = generateDigit()

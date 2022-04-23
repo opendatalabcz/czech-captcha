@@ -2,12 +2,13 @@ package com.example.captcha.task.templates.imagelabelingtemplate
 
 import com.example.captcha.datamanagement.objectmetadata.*
 import com.example.captcha.datamanagement.objectstorage.ObjectService
+import com.example.captcha.task.templates.GenerationConfig
+import com.example.captcha.task.templates.ImageLabelingGenerationConfig
 import com.example.captcha.verification.*
 import com.example.captcha.verification.entities.*
 import com.example.captcha.task.templates.TaskTemplate
 import com.example.captcha.task.templates.TemplateUtils.toBase64Image
 import com.example.captcha.task.templates.TemplateUtils.toBase64String
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -16,11 +17,10 @@ import kotlin.random.Random
 
 @Service("IMAGE_LABELING")
 class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
-                            val objectMapper: ObjectMapper,
                             val objectService: ObjectService
 ): TaskTemplate {
-    override fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
-        val config = objectMapper.treeToValue(generationConfig, ImageLabelingGenerationConfig::class.java)
+    override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
+        val config = generationConfig as ImageLabelingGenerationConfig
         val filteredImages = objectMetadataService.getFiltered(currentUser, config.tags, config.owners, ObjectTypeEnum.IMAGE)
         val labelGroupName = config.labelGroup
         val labelGroup = objectMetadataService.getLimitedLabelGroup(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "LabelGroup not found: $labelGroupName")
@@ -119,4 +119,3 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
     }
 }
 
-data class ImageLabelingGenerationConfig(val labelGroup: String, val tags: List<String>, val owners: List<String>)

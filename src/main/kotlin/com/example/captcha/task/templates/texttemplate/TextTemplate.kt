@@ -1,11 +1,11 @@
 package com.example.captcha.task.templates.texttemplate
 
+import com.example.captcha.task.templates.GenerationConfig
 import com.example.captcha.verification.*
 import com.example.captcha.verification.entities.*
 import com.example.captcha.task.templates.TaskTemplate
 import com.example.captcha.task.templates.TemplateUtils.toBase64Image
 import com.example.captcha.task.templates.TemplateUtils.toBase64String
-import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.stereotype.Component
 import java.awt.*
 import java.awt.image.BufferedImage
@@ -18,7 +18,7 @@ import kotlin.random.Random
 
 @Component("TEXT")
 object TextTemplate: TaskTemplate {
-    override fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
+    override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         val description = Description("Type the text")
         val textToType = generateRandomText(5, 8)
         val data = TextData(textToType)

@@ -15,7 +15,7 @@ import kotlin.streams.toList
 
 interface TaskTemplate {
     // Description, TaskData
-    fun generateTask(generationConfig: JsonNode, currentUser: String): Triple<Description, TaskData, AnswerSheet>
+    fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet>
     fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult
 }
 
@@ -29,7 +29,7 @@ class TaskTemplateRouter(val context: ApplicationContext) {
         templates = context.getBeansOfType(TaskTemplate::class.java).mapKeys { (key, _) -> TaskType(key) }
     }
 
-    fun generateTask(taskType: TaskType, userName: String, generationConfig: JsonNode): Triple<Description, TaskData, AnswerSheet> {
+    fun generateTask(taskType: TaskType, userName: String, generationConfig: GenerationConfig): Triple<Description, TaskData, AnswerSheet> {
         return getTemplate(taskType).generateTask(generationConfig, userName)
     }
 

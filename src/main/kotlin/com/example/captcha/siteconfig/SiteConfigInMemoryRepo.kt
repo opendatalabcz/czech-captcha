@@ -1,5 +1,7 @@
 package com.example.captcha.siteconfig
 
+import com.example.captcha.task.templates.EmptyGenerationConfig
+import com.example.captcha.task.templates.ImageLabelingGenerationConfig
 import com.example.captcha.verification.entities.TaskType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -12,7 +14,8 @@ import org.springframework.stereotype.Component
 class SiteConfigInMemoryRepo(val objectMapper: ObjectMapper) : SiteConfigRepository {
     @EventListener(ApplicationReadyEvent::class)
     fun initializeAfterStartup() {
-        val generationConfig = objectMapper.readTree("""{"labelGroup":"animals","tags":[]}""")
+//        val generationConfig = objectMapper.readTree("""{"labelGroup":"animals","tags":[]}""")
+        val generationConfig = ImageLabelingGenerationConfig("animals", emptyList(), emptyList())
         val verificationConfig = TaskConfig(TaskType("IMAGE_LABELING"), generationConfig, 0.75)
         val imageLabelingConfig = SiteConfig("siteKey3", "secretKey3", "user1", verificationConfig)
 
@@ -22,18 +25,18 @@ class SiteConfigInMemoryRepo(val objectMapper: ObjectMapper) : SiteConfigReposit
     val repo = mutableListOf(
         SiteConfig("siteKey", "secretKey", "user1", TaskConfig(
             TaskType("NUMERIC_EQUATION"),
-            ObjectNode(JsonNodeFactory.instance),
+            EmptyGenerationConfig,
             0.75
         )),
         SiteConfig("siteKey2", "secretKey2", "user1", TaskConfig(
             TaskType("SIMPLE_IMAGE"),
-            ObjectNode(JsonNodeFactory.instance),
+            EmptyGenerationConfig,
             0.75
         )),
 //        SiteConfig("siteKey3", "secretKey3", "username", VerificationConfig(TaskType("IMAGE_LABELING"), ObjectNode(JsonNodeFactory.instance))),
         SiteConfig("siteKey4", "secretKey4", "user1", TaskConfig(
             TaskType("TEXT"),
-            ObjectNode(JsonNodeFactory.instance),
+            EmptyGenerationConfig,
             0.75
         ))
     )

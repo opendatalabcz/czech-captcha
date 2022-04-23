@@ -1,5 +1,6 @@
 package com.example.captcha.task.taskconfig
 
+import com.example.captcha.siteconfig.Parent
 import com.example.captcha.task.templates.TaskTemplateRouter
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
