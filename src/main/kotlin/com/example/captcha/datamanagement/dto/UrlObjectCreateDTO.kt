@@ -1,4 +1,4 @@
-package com.example.captcha.datamanagement.objectmetadata.dto
+package com.example.captcha.datamanagement.dto
 
 import com.example.captcha.datamanagement.objectmetadata.*
 import com.example.captcha.datamanagement.objectstorage.ObjectStorageInfo

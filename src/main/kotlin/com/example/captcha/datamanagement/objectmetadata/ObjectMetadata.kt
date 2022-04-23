@@ -13,21 +13,21 @@ data class ObjectMetadata(val objectId: String, val user: String, val objectType
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>): this(objectId, user, objectType, labelGroups, emptyList())
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>, tags: List<String>): this(objectId, user, objectType, labelGroups, emptyMap(), tags)
 
-    fun label(label: Label, labelGroupName: String, positive: Boolean, maxCardinality: Int, labelRangeSize: Int) {
+    fun label(label: String, labelGroupName: String, positive: Boolean, maxCardinality: Int, labelRangeSize: Int) {
         val labeling = labels.putIfAbsent(labelGroupName, Labeling()) ?: labels[labelGroupName]!!
         labels[labelGroupName] = labeling.recordLabel(positive, label, maxCardinality, labelRangeSize)
     }
 
-    fun containsLabel(labelGroup: String, label: Label): Boolean {
+    fun containsLabel(labelGroup: String, label: String): Boolean {
         return labels[labelGroup]?.labels?.contains(label) ?: false
     }
 
-    fun containsNegativeLabel(labelGroup: String, label: Label): Boolean {
+    fun containsNegativeLabel(labelGroup: String, label: String): Boolean {
         return labels[labelGroup]?.let { (it.isLabeled && !it.labels.contains(label)) ||
                 (!it.isLabeled && it.negativeLabels.contains(label)) } ?: false
     }
 
-    fun containsUnresolvedLabel(labelGroup: String, label: Label): Boolean {
+    fun containsUnresolvedLabel(labelGroup: String, label: String): Boolean {
         return labels[labelGroup]?.let { !it.isLabeled && !it.labels.contains(label) && !it.negativeLabels.contains(label) } ?: true
     }
 }

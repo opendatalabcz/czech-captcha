@@ -4,8 +4,8 @@ import com.example.captcha.datamanagement.dto.LabelGroupCreateDTO
 import com.example.captcha.datamanagement.objectmetadata.ObjectMetadata
 import com.example.captcha.datamanagement.objectmetadata.ObjectMetadataService
 import com.example.captcha.datamanagement.objectmetadata.LabelGroup
-import com.example.captcha.datamanagement.objectmetadata.dto.ObjectDTO
-import com.example.captcha.datamanagement.objectmetadata.dto.UrlObjectCreateDTO
+import com.example.captcha.datamanagement.dto.ObjectDTO
+import com.example.captcha.datamanagement.dto.UrlObjectCreateDTO
 import com.example.captcha.datamanagement.objectstorage.ObjectCatalogue
 import com.example.captcha.datamanagement.objectstorage.ObjectStorageInfo
 import io.swagger.v3.oas.annotations.Parameter
@@ -23,7 +23,7 @@ import java.net.URI
 class ObjectController(val metadataService: ObjectMetadataService) {
 
     @GetMapping("metadata")
-    fun getImageMetadata(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<ObjectMetadata> {
+    fun getObjectMetadata(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<ObjectMetadata> {
         return metadataService.getAllAccessible(user.username)
     }
 
@@ -49,7 +49,7 @@ class ObjectController(val metadataService: ObjectMetadataService) {
 class ObjectAdminController(val metadataService: ObjectMetadataService,
                             val objectCatalogue: ObjectCatalogue) {
     @GetMapping("metadata")
-    fun getImageMetadata(): List<ObjectMetadata> {
+    fun getObjectMetadata(): List<ObjectMetadata> {
         return metadataService.getAll()
     }
 

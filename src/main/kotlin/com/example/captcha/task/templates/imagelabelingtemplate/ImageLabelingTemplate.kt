@@ -1,15 +1,17 @@
 package com.example.captcha.task.templates.imagelabelingtemplate
 
-import com.example.captcha.datamanagement.objectmetadata.*
+import com.example.captcha.datamanagement.objectmetadata.ImageObjectType
+import com.example.captcha.datamanagement.objectmetadata.ObjectMetadata
+import com.example.captcha.datamanagement.objectmetadata.ObjectMetadataService
+import com.example.captcha.datamanagement.objectmetadata.ObjectTypeEnum
 import com.example.captcha.datamanagement.objectstorage.ObjectService
 import com.example.captcha.task.templates.GenerationConfig
 import com.example.captcha.task.templates.ImageLabelingGenerationConfig
-import com.example.captcha.verification.*
-import com.example.captcha.verification.entities.*
 import com.example.captcha.task.templates.TaskTemplate
 import com.example.captcha.task.templates.TemplateUtils.toBase64Image
 import com.example.captcha.task.templates.TemplateUtils.toBase64String
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.example.captcha.verification.*
+import com.example.captcha.verification.entities.*
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -31,7 +33,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
         val expectedResults = chosenImages.map { Pair(it.first.objectId, it.second) }
         val displayableImages = toDisplayImages(chosenImages)
 
-        val description = descriptionTemplate(chosenLabel.label)
+        val description = descriptionTemplate(chosenLabel)
         val taskData = ObjectsWithLabels(chosenLabel, labelGroupName, expectedResults)
         val answerSheet = AnswerSheet(ListDisplayData(displayableImages), AnswerType.MultipleText)
 
@@ -51,7 +53,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
         return EvaluationResult(verificationResult)
     }
 
-    private fun selectImages(objects: List<ObjectMetadata>, labelGroupName: String, label: Label): List<Pair<ObjectMetadata, ExpectedResult>> {
+    private fun selectImages(objects: List<ObjectMetadata>, labelGroupName: String, label: String): List<Pair<ObjectMetadata, ExpectedResult>> {
         val totalImagesCount = 12
         val unknownLabelCount = 2
         val minWithLabel = 2
@@ -105,7 +107,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
         }
     }
 
-    fun labelUnknown(expectedResults: List<Pair<String, ExpectedResult>>, label: Label, labelGroupName: String, answer: TextListAnswer) {
+    fun labelUnknown(expectedResults: List<Pair<String, ExpectedResult>>, label: String, labelGroupName: String, answer: TextListAnswer) {
         expectedResults.withIndex().forEach { (index, result) ->
                 val (objectId, expectedResult) = result
                 if (expectedResult == ExpectedResult.UNKNOWN) {

@@ -1,16 +1,19 @@
 package com.example.captcha.datamanagement.objectmetadata
 
+import org.springframework.data.mongodb.core.mapping.Document
+
 @JvmInline
 value class Label(val label: String)
 
+@Document("labelgroup")
 open class LabelGroup(val name: String, val maxCardinality: Int) {
-    open fun rangeContainsLabel(label: Label): Boolean = true
+    open fun rangeContainsLabel(label: String): Boolean = true
     open fun rangeSize(): Int = Int.MAX_VALUE
 }
 
 // contains (0..n) vs 1 labels, where n is labels size
-class LabelGroupLimited(name: String, val labelRange: List<Label>, maxCardinality: Int): LabelGroup(name, maxCardinality) {
-    override fun rangeContainsLabel(label: Label): Boolean {
+class LabelGroupLimited(name: String, val labelRange: List<String>, maxCardinality: Int): LabelGroup(name, maxCardinality) {
+    override fun rangeContainsLabel(label: String): Boolean {
         return labelRange.contains(label)
     }
 
@@ -20,12 +23,12 @@ class LabelGroupLimited(name: String, val labelRange: List<Label>, maxCardinalit
 }
 
 
-data class Labeling(val isLabeled: Boolean, val labels: List<Label>, val negativeLabels: List<Label>,
+data class Labeling(val isLabeled: Boolean, val labels: List<String>, val negativeLabels: List<String>,
                     val labelStatistics: LabelStatistics) {
     constructor(): this(false, emptyList(), emptyList(), LabelStatistics())
-    constructor(labels: List<Label>): this(true, labels, emptyList(), LabelStatistics())
+    constructor(labels: List<String>): this(true, labels, emptyList(), LabelStatistics())
 
-    fun recordLabel(positive: Boolean, label: Label, maxCardinality: Int, labelRangeSize: Int): Labeling {
+    fun recordLabel(positive: Boolean, label: String, maxCardinality: Int, labelRangeSize: Int): Labeling {
         require(!isLabeled)
         require(!(labels.contains(label) || negativeLabels.contains(label)))
 
@@ -36,7 +39,7 @@ data class Labeling(val isLabeled: Boolean, val labels: List<Label>, val negativ
         }
     }
 
-    private fun addLabel(positive: Boolean, label: Label, maxCardinality: Int, labelRangeSize: Int): Labeling {
+    private fun addLabel(positive: Boolean, label: String, maxCardinality: Int, labelRangeSize: Int): Labeling {
         val finishedLabeling = (positive && (labels.size + 1 == maxCardinality)) ||
                 labels.size + negativeLabels.size + 1 == labelRangeSize
         return if (finishedLabeling) {
@@ -55,9 +58,9 @@ data class Labeling(val isLabeled: Boolean, val labels: List<Label>, val negativ
     }
 }
 
-data class LabelStatistics(val statistics: MutableMap<Label, LabelStatistic>) {
+data class LabelStatistics(val statistics: MutableMap<String, LabelStatistic>) {
     constructor() : this(mutableMapOf())
-    fun recordLabel(label: Label, positive: Boolean): LabelingResult {
+    fun recordLabel(label: String, positive: Boolean): LabelingResult {
         val result = statistics[label]?.recordLabel(positive)
             ?: run {
                 val statistic = LabelStatistic()
