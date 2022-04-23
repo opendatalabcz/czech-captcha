@@ -28,7 +28,8 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     }
 
     fun getFiltered(currentUser: String, tags: List<String>, owners: List<String>): List<ObjectMetadata> {
-        return getAllAccessible(currentUser).filter { owners.contains(it.user)  && it.tags.containsAll(tags) }
+        return getAllAccessible(currentUser)
+            .filter { (owners.isEmpty() || owners.contains(it.user)) && it.tags.containsAll(tags) }
     }
 
     fun getFiltered(currentUser: String, tags: List<String>, owners: List<String>, objectType: ObjectTypeEnum): List<ObjectMetadata> {
