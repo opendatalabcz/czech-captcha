@@ -25,7 +25,7 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
     }
 
     fun getSiteConfigsForUser(username: String): List<SiteConfig> {
-        return siteConfigRepo.getByUsername(username)
+        return siteConfigRepo.getByUserName(username)
     }
 
     fun secretKeyToSiteKey(secreteKey: String): String? {
@@ -40,7 +40,7 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
         val siteKey = Utils.generateUniqueId()
         val secreteKey = Utils.generateUniqueId()
 
-        return siteConfigRepo.add(SiteConfig(siteKey, secreteKey, userName, taskConfig))
+        return siteConfigRepo.insert(SiteConfig(siteKey, secreteKey, userName, taskConfig))
     }
 
     private fun fromTaskConfigDTO(taskConfigDTO: TaskConfigDTO): TaskConfig {
@@ -56,7 +56,7 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
             .find { it.findAnnotation<ATaskType>()?.name == taskType }
 
         return generationConfigClass?.let { genConfigClass -> objectMapper.treeToValue(json, genConfigClass.java) }
-            ?: EmptyGenerationConfig()
+            ?: EmptyGenerationConfig
     }
 
     private fun validateTaskConfig(taskConfig: TaskConfigDTO) {

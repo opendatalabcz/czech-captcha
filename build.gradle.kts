@@ -18,11 +18,16 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("net.pwall.json:json-kotlin-schema:0.32")
+	implementation ("io.mongock:mongock:5.0.32")
+	implementation ("io.mongock:mongock-springboot:5.0.32")
+	implementation ("io.mongock:mongodb-springdata-v3-driver:5.0.32")
+
 
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.5")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

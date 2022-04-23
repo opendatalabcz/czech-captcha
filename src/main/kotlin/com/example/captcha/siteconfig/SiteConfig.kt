@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 
 @Document("siteconfig")
-data class SiteConfig(val siteKey: String, val secretKey: String, val userName: String, val taskConfig: TaskConfig, @Id val id: ObjectId = ObjectId.get())
+data class SiteConfig(val siteKey: String, val secretKey: String, val userName: String, val taskConfig: TaskConfig)
 
 class TaskConfig(val taskType: String, val generationConfig: GenerationConfig, val evaluationThreshold: Double)
 

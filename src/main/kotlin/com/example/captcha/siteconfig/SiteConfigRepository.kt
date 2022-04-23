@@ -1,10 +1,9 @@
 package com.example.captcha.siteconfig
 
+import org.springframework.data.mongodb.repository.MongoRepository
 
-interface SiteConfigRepository {
-    fun getAll(): List<SiteConfig>
-    fun getBySiteKey(siteKey: String): SiteConfig?
-    fun getBySecretKey(secretKey: String): SiteConfig?
-    fun getByUsername(username: String): List<SiteConfig>
-    fun add(siteConfig: SiteConfig): SiteConfig
+interface SiteConfigRepository: MongoRepository<SiteConfig, String> {
+ fun getBySiteKey(siteKey: String): SiteConfig?
+ fun getBySecretKey(secretKey: String): SiteConfig?
+ fun getByUserName(username: String): List<SiteConfig>
 }
