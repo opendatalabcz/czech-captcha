@@ -9,6 +9,7 @@ import com.example.captcha.datamanagement.objectmetadata.dto.UrlObjectCreateDTO
 import com.example.captcha.datamanagement.objectstorage.ObjectCatalogue
 import com.example.captcha.datamanagement.objectstorage.ObjectStorageInfo
 import io.swagger.v3.oas.annotations.Parameter
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -53,18 +54,18 @@ class ObjectAdminController(val metadataService: ObjectMetadataService,
     }
 
     @GetMapping("storageinfo/{objectId}")
-    fun getObjectInfo(@PathVariable objectId: Long): ObjectStorageInfo {
-        return objectCatalogue.getById(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found")
+    fun getObjectInfo(@PathVariable objectId: String): ObjectStorageInfo {
+        return objectCatalogue.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found")
     }
 
     @GetMapping("storageinfo")
     fun getObjectInfoList(): List<ObjectStorageInfo> {
-        return objectCatalogue.getAll()
+        return objectCatalogue.findAll()
     }
 
     @GetMapping("{objectId}")
-    fun getObject(@PathVariable objectId: Long): ObjectDTO {
-        val objectInfo = objectCatalogue.getById(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found in catalogue")
+    fun getObject(@PathVariable objectId: String): ObjectDTO {
+        val objectInfo = objectCatalogue.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found in catalogue")
         val metadata = metadataService.getById(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Metadata for object with id $objectId not found")
         return ObjectDTO(objectInfo, metadata)
     }

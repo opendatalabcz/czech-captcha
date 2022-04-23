@@ -84,7 +84,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
         }
     }
 
-    fun evaluateAnswer(answer: TextListAnswer, expectedResults: List<Pair<Long, ExpectedResult>>): Double {
+    fun evaluateAnswer(answer: TextListAnswer, expectedResults: List<Pair<String, ExpectedResult>>): Double {
         val verifyingResultsSize = expectedResults.filter { it.second != ExpectedResult.UNKNOWN}.size
         val correctAnswers = expectedResults.withIndex().count { (index, value) ->
             val (_, expectedResult) = value
@@ -105,7 +105,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
         }
     }
 
-    fun labelUnknown(expectedResults: List<Pair<Long, ExpectedResult>>, label: Label, labelGroupName: String, answer: TextListAnswer) {
+    fun labelUnknown(expectedResults: List<Pair<String, ExpectedResult>>, label: Label, labelGroupName: String, answer: TextListAnswer) {
         expectedResults.withIndex().forEach { (index, result) ->
                 val (objectId, expectedResult) = result
                 if (expectedResult == ExpectedResult.UNKNOWN) {

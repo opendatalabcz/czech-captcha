@@ -7,16 +7,16 @@ interface ObjectMetadataRepository {
     fun updateFile(newMetadata: ObjectMetadata)
     fun saveObject(metadata: ObjectMetadata)
     fun getAll(): List<ObjectMetadata>
-    fun getById(objectId: Long): ObjectMetadata?
+    fun getById(objectId: String): ObjectMetadata?
     fun add(labelGroup: LabelGroup): Boolean
     fun getLabelGroupByName(labelGroupName: String): LabelGroup?
 }
 
 @Service
 class InMemoObjectMetadataRepo : ObjectMetadataRepository {
-    private val files = mutableListOf(
-        ObjectMetadata(1L, "system", ImageObjectType("png"), Pair("animals", Labeling(listOf(Label("cat"))))),
-        ObjectMetadata(2L, "system", ImageObjectType("png"), Pair("animals", Labeling(listOf(Label("dog"))))),
+    private val files = mutableListOf<ObjectMetadata>(
+//        ObjectMetadata(1L, "system", ImageObjectType("png"), Pair("animals", Labeling(listOf(Label("cat"))))),
+//        ObjectMetadata(2L, "system", ImageObjectType("png"), Pair("animals", Labeling(listOf(Label("dog"))))),
     )
 
     private val labelGroups = mutableListOf<LabelGroup>(
@@ -40,7 +40,7 @@ class InMemoObjectMetadataRepo : ObjectMetadataRepository {
         return files
     }
 
-    override fun getById(objectId: Long): ObjectMetadata? {
+    override fun getById(objectId: String): ObjectMetadata? {
         return files.find { it.objectId == objectId }
     }
 

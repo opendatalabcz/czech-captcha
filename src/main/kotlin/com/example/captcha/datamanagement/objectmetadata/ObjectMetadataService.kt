@@ -15,7 +15,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         return objectMetadataRepo.getAll()
     }
 
-    fun getById(id: Long): ObjectMetadata? {
+    fun getById(id: String): ObjectMetadata? {
         return objectMetadataRepo.getById(id)
     }
 
@@ -96,7 +96,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         }
     }
 
-    fun labelObject(objectId: Long, labelGroupName: String, label: Label, positiveLabel: Boolean = true) {
+    fun labelObject(objectId: String, labelGroupName: String, label: Label, positiveLabel: Boolean = true) {
         // first check validity
         val labelGroup = objectMetadataRepo.getLabelGroupByName(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group with name $labelGroupName does not exist")
         require(labelGroup.rangeContainsLabel(label)) // system issue
@@ -107,7 +107,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         objectMetadataRepo.updateFile(metadata)
     }
 
-    fun addUrlObject(urlObjectCreateDto: UrlObjectCreateDTO, user: String): Long {
+    fun addUrlObject(urlObjectCreateDto: UrlObjectCreateDTO, user: String): String {
         val fileId = objectService.saveURLFile(user, urlObjectCreateDto.url)
 
         val labels = urlObjectCreateDto.metadata.labels.mapValues { (labelGroupName, labels) ->
