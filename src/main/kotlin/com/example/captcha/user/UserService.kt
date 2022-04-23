@@ -15,6 +15,11 @@ class UserService(private val userRepo: UserRepository, val passwordEncoder: Pas
         return userRepo.existsByUsername(userName)
     }
 
+    fun getUsers(): List<UserInfoDTO> {
+        return userRepo.findAll()
+            .map { userData -> UserInfoDTO(userData.username, userData.authorities.map { it.authority }) }
+    }
+
     fun createUser(userName: String, password: String) {
         if (userExists(userName)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "User already exists")
@@ -30,3 +35,5 @@ class UserService(private val userRepo: UserRepository, val passwordEncoder: Pas
             ?: throw UsernameNotFoundException("User with username $username not found")
     }
 }
+
+data class UserInfoDTO(val userName: String, val authorities: List<String>)

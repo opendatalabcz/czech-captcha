@@ -1,9 +1,6 @@
 package com.example.captcha.user
 
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("api/admin/users")
@@ -14,6 +11,10 @@ class UserController(val userService: UserService) {
         userService.createUser(userDetails.username, userDetails.password)
     }
 
+    @GetMapping
+    fun getAllUserInfo(): List<UserInfoDTO> {
+        return userService.getUsers()
+    }
 }
 
 
