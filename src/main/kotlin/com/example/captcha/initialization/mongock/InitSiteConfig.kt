@@ -17,22 +17,22 @@ class InitSiteConfig(val siteConfigRepo: SiteConfigRepository) {
     @Execution
     fun changeSet() {
         val toStore = mutableListOf(
-            SiteConfig("siteKey", "secretKey", "user1", TaskConfig(
+            SiteConfig("siteKey", "secretKey", "user", TaskConfig(
                 "NUMERIC_EQUATION",
                 EmptyGenerationConfig,
                 0.75
             )),
-            SiteConfig("siteKey2", "secretKey2", "user1", TaskConfig(
+            SiteConfig("siteKey2", "secretKey2", "user", TaskConfig(
                 "SIMPLE_IMAGE",
                 EmptyGenerationConfig,
                 0.75
             )),
-            SiteConfig("siteKey3", "secretKey3", "user1", TaskConfig(
+            SiteConfig("siteKey3", "secretKey3", "user", TaskConfig(
                 "IMAGE_LABELING",
                 ImageLabelingGenerationConfig("animals", emptyList(), emptyList()),
                 0.95
             )),
-            SiteConfig("siteKey4", "secretKey4", "user1", TaskConfig(
+            SiteConfig("siteKey4", "secretKey4", "user", TaskConfig(
                 "TEXT",
                 EmptyGenerationConfig,
                 0.75

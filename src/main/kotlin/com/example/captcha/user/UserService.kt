@@ -2,16 +2,17 @@ package com.example.captcha.user
 
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
 @Service
-class UserService(val inMemoryUserDetailsManager: InMemoryUserDetailsManager,
-                  val passwordEncoder: PasswordEncoder) {
+class UserService(private val userRepo: UserRepository, val passwordEncoder: PasswordEncoder): UserDetailsService {
     fun userExists(userName: String): Boolean {
-        return inMemoryUserDetailsManager.userExists(userName)
+        return userRepo.existsByUsername(userName)
     }
 
     fun createUser(userName: String, password: String) {
@@ -20,7 +21,12 @@ class UserService(val inMemoryUserDetailsManager: InMemoryUserDetailsManager,
         }
 
         val hashedPassword = passwordEncoder.encode(password)
-        val user = org.springframework.security.core.userdetails.User(userName, hashedPassword, listOf(SimpleGrantedAuthority("ROLE_USER")))
-        inMemoryUserDetailsManager.createUser(user)
+        val user = UserData(userName, hashedPassword, mutableListOf(SimpleGrantedAuthority("ROLE_USER")))
+        userRepo.insert(user)
+    }
+
+    override fun loadUserByUsername(username: String): UserDetails {
+        return userRepo.findByUsername(username)
+            ?: throw UsernameNotFoundException("User with username $username not found")
     }
 }

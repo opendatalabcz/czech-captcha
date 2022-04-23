@@ -42,25 +42,6 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
             .csrf().ignoringAntMatchers("/**")
     }
 
-    override fun configure(auth: AuthenticationManagerBuilder) {
-        auth.userDetailsService(inMemoryUserDetailsManager())
-    }
-
-    @Bean
-    fun inMemoryUserDetailsManager(): InMemoryUserDetailsManager {
-        val userDetailsList: MutableList<UserDetails> = ArrayList()
-        userDetailsList.add(
-            User.withUsername("system").password(passwordEncoder().encode("pass"))
-                .roles("ADMIN", "USER").build()
-        )
-        userDetailsList.add(
-            User.withUsername("user1").password(passwordEncoder().encode("pass"))
-                .roles("USER").build()
-        )
-
-        return InMemoryUserDetailsManager(userDetailsList)
-    }
-
     @Bean
     fun passwordEncoder(): BCryptPasswordEncoder {
         return BCryptPasswordEncoder()

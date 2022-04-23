@@ -13,7 +13,6 @@ class SiteConfigController(val siteConfigService: SiteConfigService) {
 
     @GetMapping
     fun getSiteConfigs(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<SiteConfig> {
-        println(user.username)
         return siteConfigService.getSiteConfigsForUser(user.username)
     }
 
