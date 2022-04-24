@@ -18,12 +18,7 @@ class InitSiteConfig(val siteConfigRepo: SiteConfigRepository) {
             SiteConfig("siteKey", "secretKey", "user", TaskConfig(
                 "NUMERIC_EQUATION",
                 EmptyGenerationConfig,
-                0.75
-            )),
-            SiteConfig("siteKey2", "secretKey2", "user", TaskConfig(
-                "SIMPLE_IMAGE",
-                EmptyGenerationConfig,
-                0.75
+                0.8
             )),
             SiteConfig("siteKey3", "secretKey3", "user", TaskConfig(
                 "IMAGE_LABELING",
@@ -33,7 +28,7 @@ class InitSiteConfig(val siteConfigRepo: SiteConfigRepository) {
             SiteConfig("siteKey4", "secretKey4", "user", TaskConfig(
                 "TEXT",
                 EmptyGenerationConfig,
-                0.75
+                0.8
             ))
         )
 

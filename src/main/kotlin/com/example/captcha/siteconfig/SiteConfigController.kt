@@ -21,4 +21,9 @@ class SiteConfigController(val siteConfigService: SiteConfigService) {
         val newConfig = siteConfigService.create(user.username, taskConfig)
         return SiteConfigCreated.fromEntity(newConfig)
     }
+
+    @DeleteMapping
+    fun deleteSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody siteKey: String) {
+        val newConfig = siteConfigService.deleteConfig(user.username, siteKey)
+    }
 }

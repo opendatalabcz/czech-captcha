@@ -43,6 +43,16 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
         return siteConfigRepo.insert(SiteConfig(siteKey, secreteKey, userName, taskConfig))
     }
 
+    fun deleteConfig(username: String, siteKey: String) {
+        val canBeDeleted = siteConfigRepo.getBySiteKey(siteKey)?.let { it.userName == username } ?: false
+
+        if (!canBeDeleted) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Sitekey $siteKey not found")
+        }
+
+        siteConfigRepo.deleteBySiteKey(siteKey)
+    }
+
     private fun fromTaskConfigDTO(taskConfigDTO: TaskConfigDTO): TaskConfig {
         val generationConfig = fromGenerationConfigJSON(taskConfigDTO.generationConfig, taskConfigDTO.taskType)
 
