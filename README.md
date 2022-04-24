@@ -32,9 +32,18 @@ The benefits of him using the CAPTCHA, are that he is able to security mechanism
 
 ## Deployment
 
-Currently, it is possible to build and deploy the application only using docker -- without installing any other dependencies.
+Currently, it is possible to build and deploy the application only using docker compose -- without installing any other dependencies. Make sure you set up environment variables needed from docker-compose.yml file.
 
 ```
-docker build -t captcha .
-docker run -d --rm --name captcha  -p 8080:8080 captcha
+# Start the application
+docker-compose -p captcha up -d
+# Stop the application
+docker compose -p captcha stop
+```
+
+To run the application with default configuration, use the default configuration in .env-example file.
+
+```
+# Start the application with default configuration
+docker-compose --env-file .env-example  -p captcha up -d
 ```

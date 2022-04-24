@@ -1,0 +1,22 @@
+services:
+  captcha:
+    build: .
+    image: captcha
+    ports:
+      - "8080:8080"
+    depends_on:
+      - captchadb
+    environment:
+      - spring.data.mongodb.host=captchadb
+      - spring.data.mongodb.port=27017
+      - spring.data.mongodb.username=${CAPTCHADB_USERNAME}
+      - spring.data.mongodb.password=${CAPTCHADB_PASS}
+  captchadb:
+    image: mongo
+    volumes:
+      - ${MONGO_STORAGE_PATH}:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${CAPTCHADB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${CAPTCHADB_PASS}
+    ports:
+      - "27017:27017"
