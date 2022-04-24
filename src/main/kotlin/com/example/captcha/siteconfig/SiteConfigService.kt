@@ -2,7 +2,7 @@ package com.example.captcha.siteconfig
 
 import com.example.captcha.Utils
 import com.example.captcha.task.taskconfig.TaskConfigService
-import com.example.captcha.task.templates.ATaskType
+import com.example.captcha.task.templates.TaskType
 import com.example.captcha.task.templates.EmptyGenerationConfig
 import com.example.captcha.task.templates.GenerationConfig
 import com.fasterxml.jackson.databind.JsonNode
@@ -62,8 +62,8 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
     private fun fromGenerationConfigJSON(json: JsonNode, taskType: String): GenerationConfig {
         // Get GenerationConfig data class for the task type
         val generationConfigClass = GenerationConfig::class.sealedSubclasses
-            .filter { it.hasAnnotation<ATaskType>() }
-            .find { it.findAnnotation<ATaskType>()?.name == taskType }
+            .filter { it.hasAnnotation<TaskType>() }
+            .find { it.findAnnotation<TaskType>()?.name == taskType }
 
         return generationConfigClass?.let { genConfigClass -> objectMapper.treeToValue(json, genConfigClass.java) }
             ?: EmptyGenerationConfig

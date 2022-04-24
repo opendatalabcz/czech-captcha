@@ -35,10 +35,15 @@ The benefits of him using the CAPTCHA, are that he is able to security mechanism
 Currently, it is possible to build and deploy the application only using docker compose -- without installing any other dependencies. Make sure you set up environment variables needed from docker-compose.yml file.
 
 ```
-# Start the application
+# 1. Runs tests
+# 2. Builds the jar file from Kotlin source files
+# 3. Build the docker image
 docker-compose build
+
+# Start the application - Runs and connects the containers
 docker-compose -p captcha up -d
-# Stop the application
+
+# Stops the application
 docker compose -p captcha stop
 ```
 
