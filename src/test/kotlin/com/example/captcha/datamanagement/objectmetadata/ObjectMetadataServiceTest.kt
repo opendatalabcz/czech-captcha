@@ -11,15 +11,16 @@ import org.junit.jupiter.api.Test
 
 internal class ObjectMetadataServiceTest {
 
-    private val repo: ObjectMetadataRepository = mockk()
+    private val objectMetadataRepo: ObjectMetadataRepository = mockk()
+    private val labegroupRepo: LabelGroupRepository = mockk()
     private val objectService: ObjectService = mockk()
-    val service = ObjectMetadataService(repo, objectService)
+    val service = ObjectMetadataService(objectMetadataRepo, objectService, labegroupRepo)
 
 
     @Test
     fun `getLimitedLabelGroup non empty`() {
         val labelGroupName = "labelGroupName"
-        every { repo.getLabelGroupByName(labelGroupName) } returns LabelGroupLimited("name", emptyList(), 2)
+        every { labegroupRepo.findByName(labelGroupName) } returns LabelGroupLimited("name", emptyList(), 2)
 
         val result = service.getLimitedLabelGroup(labelGroupName)
 
@@ -29,7 +30,7 @@ internal class ObjectMetadataServiceTest {
     @Test
     fun `getLimitedLabelGroup empty`() {
         val labelGroupName = "labelGroupNameNonExistent"
-        every { repo.getLabelGroupByName(labelGroupName) } returns null
+        every { labegroupRepo.findByName(labelGroupName) } returns null
 
         val result = service.getLimitedLabelGroup(labelGroupName)
 
@@ -39,7 +40,7 @@ internal class ObjectMetadataServiceTest {
     @Test
     fun `getLimitedLabelGroup not limited`() {
         val labelGroupName = "labelGroupName"
-        every { repo.getLabelGroupByName(labelGroupName) } returns LabelGroup("name", 2)
+        every { labegroupRepo.findByName(labelGroupName) } returns LabelGroup("name", 2)
 
         val result = service.getLimitedLabelGroup(labelGroupName)
 
