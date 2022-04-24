@@ -1,12 +1,15 @@
 package com.example.captcha.datamanagement.objectmetadata
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.Document
 
 /**
  * Object metadata are data about objects used for business purposes, used by task templates
  */
 // labels ... <labelGroupName, Lableling>
-data class ObjectMetadata(val objectId: String, val user: String, val objectType: ObjectType, val labels: MutableMap<String,Labeling>,
+@Document("objectmetadata")
+data class ObjectMetadata(@Id val objectId: String, val user: String, val objectType: ObjectType, val labels: MutableMap<String,Labeling>,
                           val taskData: Map<String, OtherMetadataType>, val tags: List<String>) {
     constructor(objectId: String, user: String, objectType: ObjectType): this(objectId, user, objectType, mutableMapOf())
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroup: Pair<String, Labeling>): this(objectId, user, objectType, mutableMapOf(labelGroup))

@@ -1,12 +1,13 @@
 package com.example.captcha.user
 
+import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 
 @Document("user")
-data class UserData(private val username: String, private var password: String, val authorities: List<String>): UserDetails {
+data class UserData(@Id private val username: String, private var password: String, val authorities: List<String>): UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
         return authorities.map { SimpleGrantedAuthority(it) }.toMutableList()
     }

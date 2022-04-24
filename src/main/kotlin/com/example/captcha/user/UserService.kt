@@ -38,7 +38,7 @@ class UserService(private val userRepo: UserRepository, val passwordEncoder: Pas
         val user = userRepo.findByUsername(username)
             ?: throw UsernameNotFoundException("User with username $username not found")
 
-        user.password = password
+        user.password = passwordEncoder.encode(password)
 
         userRepo.save(user)
     }
