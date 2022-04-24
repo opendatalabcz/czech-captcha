@@ -2,16 +2,21 @@ package com.example.captcha.user
 
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 
 @Document("user")
-data class UserData(private val username: String, private val password: String, val authorities: MutableList<GrantedAuthority>): UserDetails {
+data class UserData(private val username: String, private var password: String, val authorities: List<String>): UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
-        return authorities
+        return authorities.map { SimpleGrantedAuthority(it) }.toMutableList()
     }
 
     override fun getPassword(): String {
         return password
+    }
+
+    fun setPassword(newPassword: String) {
+        password = newPassword
     }
 
     override fun getUsername(): String {

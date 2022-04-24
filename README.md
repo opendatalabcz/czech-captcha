@@ -36,6 +36,7 @@ Currently, it is possible to build and deploy the application only using docker 
 
 ```
 # Start the application
+docker-compose build
 docker-compose -p captcha up -d
 # Stop the application
 docker compose -p captcha stop

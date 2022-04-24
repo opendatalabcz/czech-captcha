@@ -10,8 +10,6 @@ import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution
 
 
-
-
 @ChangeUnit(id="siteconfig-initializer", order = "0001", author = "ov")
 class InitSiteConfig(val siteConfigRepo: SiteConfigRepository) {
     @Execution

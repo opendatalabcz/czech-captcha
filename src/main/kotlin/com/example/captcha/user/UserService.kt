@@ -1,7 +1,6 @@
 package com.example.captcha.user
 
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -17,7 +16,7 @@ class UserService(private val userRepo: UserRepository, val passwordEncoder: Pas
 
     fun getUsers(): List<UserInfoDTO> {
         return userRepo.findAll()
-            .map { userData -> UserInfoDTO(userData.username, userData.authorities.map { it.authority }) }
+            .map { userData -> UserInfoDTO(userData.username, userData.authorities) }
     }
 
     fun createUser(userName: String, password: String) {
@@ -26,13 +25,22 @@ class UserService(private val userRepo: UserRepository, val passwordEncoder: Pas
         }
 
         val hashedPassword = passwordEncoder.encode(password)
-        val user = UserData(userName, hashedPassword, mutableListOf(SimpleGrantedAuthority("ROLE_USER")))
+        val user = UserData(userName, hashedPassword, listOf("ROLE_USER"))
         userRepo.insert(user)
     }
 
     override fun loadUserByUsername(username: String): UserDetails {
         return userRepo.findByUsername(username)
             ?: throw UsernameNotFoundException("User with username $username not found")
+    }
+
+    fun changePassword(password: String, username: String) {
+        val user = userRepo.findByUsername(username)
+            ?: throw UsernameNotFoundException("User with username $username not found")
+
+        user.password = password
+
+        userRepo.save(user)
     }
 }
 
