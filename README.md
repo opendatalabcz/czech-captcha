@@ -53,3 +53,7 @@ To run the application with default configuration, use the default configuration
 # Start the application with default configuration
 docker-compose --env-file .env-example  -p captcha up -d
 ```
+
+## Demo with frontend library
+Repository https://github.com/OtakarVinklar/captcha-exampleApp
+contains a simple web application which uses the CAPTCHA. Further it contains simple javascript library, which could be reused.
