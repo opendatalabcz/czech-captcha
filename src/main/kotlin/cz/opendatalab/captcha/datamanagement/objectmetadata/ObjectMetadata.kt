@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 // labels ... <labelGroupName, Lableling>
 @Document("objectmetadata")
 data class ObjectMetadata(@Id val objectId: String, val user: String, val objectType: ObjectType, val labels: MutableMap<String,Labeling>,
-                          val taskData: Map<String, OtherMetadataType>, val tags: List<String>) {
+                          val templateData: Map<String, OtherMetadataType>, val tags: List<String>) {
     constructor(objectId: String, user: String, objectType: ObjectType): this(objectId, user, objectType, mutableMapOf())
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroup: Pair<String, Labeling>): this(objectId, user, objectType, mutableMapOf(labelGroup))
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>): this(objectId, user, objectType, labelGroups, emptyList())
