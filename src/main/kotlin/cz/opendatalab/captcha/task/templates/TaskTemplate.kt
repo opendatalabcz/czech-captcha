@@ -20,9 +20,9 @@ interface TaskTemplate {
 }
 
 @Service
-class TaskTemplateRouter(val context: ApplicationContext) {
+class TaskTemplateRouter(private val context: ApplicationContext) {
 
-    lateinit var templates:Map<String, TaskTemplate>
+    private lateinit var templates:Map<String, TaskTemplate>
 
     @EventListener(ApplicationReadyEvent::class)
     fun initializeAfterStartup() {

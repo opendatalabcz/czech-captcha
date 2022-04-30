@@ -24,20 +24,17 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
             .authorizeRequests()
-//            .antMatchers("/**").permitAll()
-            .antMatchers("/api/verification/*", "/swagger-ui/*", "/v3/api-docs", "/v3/api-docs/*").permitAll()
+            .antMatchers("/api/verification/**", "/swagger-ui/*", "/v3/api-docs", "/v3/api-docs/*").permitAll()
             .antMatchers("/api/admin/**/*").hasAuthority("ROLE_ADMIN")
             .anyRequest().authenticated()
             .and()
                 .formLogin()
-//            .loginPage("/login")
                 .permitAll()
             .and()
                 .logout()
                 .permitAll()
             .and()
                 .httpBasic()
-        // todo is this necessary?
         http
             .csrf().ignoringAntMatchers("/**")
     }
