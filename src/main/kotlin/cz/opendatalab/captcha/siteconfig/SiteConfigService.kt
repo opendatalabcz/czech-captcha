@@ -33,14 +33,14 @@ class SiteConfigService(val siteConfigRepo: SiteConfigRepository,
         return siteConfig?.siteKey
     }
 
-    fun create(userName: String, taskConfigDTO: TaskConfigDTO): SiteConfig {
+    fun create(userName: String, configName: String, taskConfigDTO: TaskConfigDTO): SiteConfig {
         validateTaskConfig(taskConfigDTO)
         val taskConfig = fromTaskConfigDTO(taskConfigDTO)
 
         val siteKey = Utils.generateUniqueId()
         val secreteKey = Utils.generateUniqueId()
 
-        return siteConfigRepo.insert(SiteConfig(siteKey, secreteKey, userName, taskConfig))
+        return siteConfigRepo.insert(SiteConfig(siteKey, secreteKey, userName, configName, taskConfig))
     }
 
     fun deleteConfig(username: String, siteKey: String) {

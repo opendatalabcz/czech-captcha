@@ -1,6 +1,7 @@
 package cz.opendatalab.captcha.siteconfig
 
 
+import cz.opendatalab.captcha.siteconfig.dto.CreateSiteConfigDTO
 import cz.opendatalab.captcha.siteconfig.dto.SiteConfigCreated
 import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -17,8 +18,8 @@ class SiteConfigController(val siteConfigService: SiteConfigService) {
     }
 
     @PostMapping
-    fun createSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody taskConfig: TaskConfigDTO): SiteConfigCreated {
-        val newConfig = siteConfigService.create(user.username, taskConfig)
+    fun createSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody siteConfig: CreateSiteConfigDTO): SiteConfigCreated {
+        val newConfig = siteConfigService.create(user.username, siteConfig.name, siteConfig.taskConfigDTO)
         return SiteConfigCreated.fromEntity(newConfig)
     }
 
