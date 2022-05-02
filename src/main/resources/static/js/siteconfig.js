@@ -24,26 +24,27 @@ const SiteConfig = {
             });
         },
         createSiteConfig() {
+            if (!this.validFormInput()) {
+                return
+            }
             const generationConfig = this.generationConfigEditor.getValue()
 
-            // console.log(this.configName, this.evaluationThreshold, this.taskType)
             createSiteConfig(this.configName, this.taskType, this.evaluationThreshold, generationConfig).then(response => {
                 this.updateConfigList()
             });
+            this.emptyForm()
         },
 
         updateTaskTypes() {
             getTaskTypes().then(response => {
                 this.taskTypes = response.data
                 this.taskType = this.taskTypes[0]
-                console.log(this.taskTypes, this.taskType)
                 // this.updateTaskSchema()
             })
         },
         updateTaskSchema() {
             getTaskTypeSchema(this.taskType).then(response => {
                 this.taskSchema = response.data
-                console.log(response.data)
 
                 if (this.generationConfigEditor != null) {
                     this.generationConfigEditor.destroy()
@@ -56,11 +57,24 @@ const SiteConfig = {
                     disable_properties: true,
                     disable_collapse: true,
                     enable_array_copy: true,
+                    // show_errors: 'change',
                     // theme: 'bootstrap4'
                     iconlib: "fontawesome5"
                 }
                 this.generationConfigEditor = new JSONEditor(generationFormElem, options);
             });
+        },
+        emptyForm() {
+            this.configName = '';
+            this.evaluationThreshold = 1;
+            this.generationConfigEditor.setValue({});
+        },
+        validFormInput() {
+            const generationConfigValid = this.generationConfigEditor.validate().length === 0
+            const validThreshold = this.evaluationThreshold >= 0 && this.evaluationThreshold <= 1
+
+            return generationConfigValid && validThreshold &&
+                !!this.configName && !!this.taskType
         }
     },
     watch: {

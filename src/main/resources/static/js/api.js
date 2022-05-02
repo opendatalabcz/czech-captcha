@@ -28,4 +28,12 @@ function createSiteConfig(configName, taskType, evaluationThreshold, generationC
     return axios.post(ENDPOINTS.siteConfigs, body)
 }
 
-export {getConfigs, deleteConfig, getTaskTypes, getTaskTypeSchema, createSiteConfig}
+function getLabelGroups() {
+    return axios.get(ENDPOINTS.labelGroups)
+}
+
+function createLabelGroup(labelGroup) {
+    return axios.post(ENDPOINTS.labelGroups, labelGroup)
+}
+
+export {getConfigs, deleteConfig, getTaskTypes, getTaskTypeSchema, createSiteConfig, getLabelGroups, createLabelGroup}

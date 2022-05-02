@@ -4,21 +4,72 @@
     <meta charset="UTF-8">
     <title>CAPTCHA configuration</title>
 
-    <script src="./js/siteconfig.js" defer></script>
+    <script src="https://unpkg.com/vue@3.2.31"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+
+    <script src="./js/labelgroup.js" type="module" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="page-header">
-        <a href="index.html"><span class="header-option">Site configuration</span></a>
-        <a href="data-objects.html"><span class="header-option">Data Objects</span></a>
-        <a href="label-groups.html"><span class="header-option selected">Label Groups</span></a>
-    </header>
-    <main>
-    </main>
+<header class="page-header">
+    <a href="index.html"><span class="header-option">Site configuration</span></a>
+    <a href="data-objects.html"><span class="header-option">Data Objects</span></a>
+    <a href="label-groups.html"><span class="header-option selected">Label Groups</span></a>
+</header>
+<main id="app">
+    <section class="configuration-list">
+        <div class="headline">Label groups</div>
+        <table class="styled-table">
+            <thead>
+            <tr>
+                <th>Label group name</th>
+                <th>Maximal cardinality</th>
+                <th>Range</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="group in labelGroups">
+                <td>{{ group.name }}</td>
+                <td>{{ group.maxCardinality }}</td>
+                <td>{{ rangeDisplayValue(group) }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <div class="headline">Create label group</div>
+        <form>
+            <div class="my-form">
+                <label for="groupName">Name</label>
+                <input type="text" id="groupName" v-model="groupName">
+
+                <label for="maxCardinality">Maximal cardinality</label>
+                <input type="number" id="maxCardinality" v-model="maxCardinality">
+
+                <label for="unlimitedRange">Unlimited Range</label>
+                <input type="checkbox" id="unlimitedRange" v-model="unlimitedRange"/>
+            </div>
+
+            <div v-if="!unlimitedRange" class="my-form">
+                <label><button v-on:click="addLabel()" type="button">Add Label</button></label>
+                <input type="text" v-model="enteredLabel">
+                <label>Labels</label>
+                <div class="array-pool">
+                    <div v-for="(label, index) in labels"><span>{{ label }}</span> <button type="button" v-on:click="removeLabel(index)" class="remove-icon fas fa-trash"></button></div>
+                </div>
+            </div>
+
+            <button v-on:click="createLabelGroup()" type="button" class="important-button">Create</button>
+        </form>
+    </section>
+</main>
 </body>
 </html>

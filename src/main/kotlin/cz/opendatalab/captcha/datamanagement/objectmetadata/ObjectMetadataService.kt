@@ -93,7 +93,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group max cardinality must be positive number, found ${labelGroupCreate.maxCardinality}")
         }
 
-        if (!labelGroupRepo.existsByName(labelGroup.name)) {
+        if (labelGroupRepo.existsByName(labelGroup.name)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group with name ${labelGroupCreate.name} already exists")
         }
         labelGroupRepo.insert(labelGroup)

@@ -10,6 +10,7 @@
     "labelGroup": {
       "type": "string",
       "title": "Label group",
+      "minLength": 1,
       "description": "Selected group of labels will be used for the task generation; List of all label group can be found in the configuration UI"
     },
     "tags": {
@@ -18,6 +19,7 @@
       "title": "Image tags",
       "items": {
         "title": "Tag",
+        "minLength": 1,
         "type": "string"
       },
       "description": "Only images that contain all the specified tags will be used (logical AND)"
@@ -28,6 +30,7 @@
       "title": "Image owners",
       "items": {
         "title": "Owner",
+        "minLength": 1,
         "type": "string"
       },
       "description": "Only images from the specified list of owners will be used. If no owner is selected, than no restriction is applied"
