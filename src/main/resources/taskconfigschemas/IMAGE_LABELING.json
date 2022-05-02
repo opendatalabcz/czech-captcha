@@ -1,28 +1,36 @@
 {
-  "title": "Task setup",
+  "title": "Generation configuration",
   "type": "object",
   "required": [
     "labelGroup",
-    "tags"
+    "tags",
+    "owners"
   ],
   "properties": {
     "labelGroup": {
       "type": "string",
       "title": "Label group",
-      "description": "Select which collection of labels is going to be used in the task; List of all label group can be found on the image service UI"
+      "description": "Selected group of labels will be used for the task generation; List of all label group can be found in the configuration UI"
     },
     "tags": {
       "type": "array",
-      "title": "Image tag",
+      "format": "table",
+      "title": "Image tags",
       "items": {
+        "title": "Tag",
         "type": "string"
       },
-      "description": "Use only images with these tags only, image has to contain all the tags (logical AND)"
+      "description": "Only images that contain all the specified tags will be used (logical AND)"
     },
     "owners": {
-      "type": "string",
+      "type": "array",
+      "format": "table",
       "title": "Image owners",
-      "description": "Use only images from specified owners. Conjunction of images owned by one of the owners (logical OR)"
+      "items": {
+        "title": "Owner",
+        "type": "string"
+      },
+      "description": "Only images from the specified list of owners will be used. If no owner is selected, than no restriction is applied"
     }
   }
 }
