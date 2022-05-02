@@ -19,12 +19,12 @@ class SiteConfigController(val siteConfigService: SiteConfigService) {
 
     @PostMapping
     fun createSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody siteConfig: CreateSiteConfigDTO): SiteConfigCreated {
-        val newConfig = siteConfigService.create(user.username, siteConfig.name, siteConfig.taskConfigDTO)
+        val newConfig = siteConfigService.create(user.username, siteConfig.name, siteConfig.taskConfig)
         return SiteConfigCreated.fromEntity(newConfig)
     }
 
-    @DeleteMapping
-    fun deleteSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody siteKey: String) {
+    @DeleteMapping("{siteKey}")
+    fun deleteSiteConfig(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @PathVariable siteKey: String) {
         siteConfigService.deleteConfig(user.username, siteKey)
     }
 }
