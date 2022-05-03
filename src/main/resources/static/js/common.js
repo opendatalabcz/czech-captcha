@@ -6,7 +6,7 @@ const ENDPOINTS = {
     siteConfigs: API_BASE_PATH + 'siteconfig',
     labelGroups: OBJECTS_PATH + '/labelgroups',
     createUrlObject: OBJECTS_PATH + '/url',
-    objects: OBJECTS_PATH + 'TODO! create endpoint summarizing the user\'s objects',
+    objects: OBJECTS_PATH,
     taskTypes: TASKCONFIG_PATH + '/tasks',
     taskTypeSchemas: TASKCONFIG_PATH + '/schemas'
 }

@@ -4,22 +4,68 @@
     <meta charset="UTF-8">
     <title>CAPTCHA configuration</title>
 
-    <script src="./js/siteconfig.js" defer></script>
+    <script src="https://unpkg.com/vue@3.2.31"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+
+    <script src="./js/object.js" type="module" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="page-header">
-        <a href="index.html"><span class="header-option">Site configuration</span></a>
-        <a href="data-objects.html"><span class="header-option selected">Data Objects</span></a>
-        <a href="label-groups.html"><span class="header-option">Label Groups</span></a>
-    </header>
-    <main>
-
-    </main>
+<header class="page-header">
+    <a href="index.html"><span class="header-option">Site configuration</span></a>
+    <a href="data-objects.html"><span class="header-option selected">Data Objects</span></a>
+    <a href="label-groups.html"><span class="header-option">Label Groups</span></a>
+</header>
+<main id="app">
+    <section class="last-section">
+        <div class="headline">Label groups</div>
+        <table class="styled-table">
+            <thead>
+            <tr>
+                <th>Object Id</th>
+                <th>Type</th>
+                <th>Owner</th>
+                <th>Repository</th>
+                <th>Path</th>
+            </tr>
+            </thead>
+            <tbody>
+                <template v-for="(object, index) in objects">
+                    <tr v-on:click="toggleRow(index)">
+                        <td>{{ object.storageInfo.id }}</td>
+                        <td>{{ object.metadata.objectType.type }}</td>
+                        <td>{{ object.storageInfo.owner }}</td>
+                        <td>{{ object.storageInfo.repositoryType }}</td>
+                        <td>{{ object.storageInfo.path }}</td>
+                    </tr>
+                    <tr v-if="isOpened(index)">
+                        <td colspan="5" class="opened-row">
+                            <div class="small-heading">Tags:</div>
+                            <div class="object-content">{{ object.metadata.tags }}</div>
+                            <div class="small-heading">Labels:</div>
+                            <div class="object-content">{{ object.metadata.labels }}</div>
+                            <div class="small-heading">Template data:</div>
+                            <div class="object-content">{{ object.metadata.templateData }}</div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <button type="button" class="important-button" v-on:click="updateObjects">Refresh</button>
+    </section>
+    <section class="last-section">
+        <div class="subheadline">Adding objects:</div>
+        <div class="object-content">
+            To add new objects use the objects endpoint. All the endpoint can be in the <a target="_blank" rel="noopener noreferrer" href="http://localhost:8080/swagger-ui/index.html">API documentation</a>.
+        </div>
+    </section>
+</main>
 </body>
 </html>

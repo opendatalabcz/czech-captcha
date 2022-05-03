@@ -36,4 +36,9 @@ function createLabelGroup(labelGroup) {
     return axios.post(ENDPOINTS.labelGroups, labelGroup)
 }
 
-export {getConfigs, deleteConfig, getTaskTypes, getTaskTypeSchema, createSiteConfig, getLabelGroups, createLabelGroup}
+function getObjects() {
+    return axios.get(ENDPOINTS.objects)
+}
+
+export {getConfigs, deleteConfig, getTaskTypes, getTaskTypeSchema, createSiteConfig, getLabelGroups, createLabelGroup,
+    getObjects}

@@ -14,6 +14,10 @@ class ObjectService(private val objectCatalogue: ObjectCatalogue) {
         return FileRepository.getFile(metadata.path, metadata.repositoryType)
     }
 
+    fun getInfoByIdList(ids: Iterable<String>): List<ObjectStorageInfo> {
+        return objectCatalogue.findAllById(ids).toList()
+    }
+
     fun saveFile(user: String, file: MultipartFile, fileName: String): String {
         // TODO do not hardcode this
         val fileRepositoryType = ObjectRepositoryType.FILESYSTEM

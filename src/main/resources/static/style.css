@@ -18,8 +18,14 @@ section {
     width: 900px;
 }
 
+.last-section {
+    margin-bottom: 50px;
+}
+
 a {
     text-decoration: none;
+    color: #4ABDAC;
+    font-weight: 600;
 }
 
 .page-header {
@@ -69,24 +75,47 @@ a {
 
 .styled-table th,
 .styled-table td {
-    padding: 12px 15px;
+    padding: 8px 10px;
 }
 
 .styled-table tbody tr {
     border-bottom: 1px solid #dddddd;
 }
 
-.styled-table tbody tr:nth-of-type(even) {
-    background-color: #f3f3f3;
-}
+/*.styled-table tbody tr:nth-of-type(even) {*/
+/*    background-color: #f3f3f3;*/
+/*}*/
 
 .styled-table tbody tr:last-of-type {
     border-bottom: 2px solid #4ABDAC;
 }
 
+.styled-table tbody tr:hover {
+    background-color: #eaeaea;
+}
+
 .styled-table tbody tr.active-row {
     font-weight: bold;
     color: #4ABDAC;
+}
+
+.opened-row {
+ background-color: white;
+    padding: 15px 15px;
+}
+
+.small-heading {
+    font-weight: 600;
+    font-size: 16px;
+    color: #535353;
+}
+
+.object-content {
+    font-weight: 500;
+    font-size: 14px;
+    color: #535353;
+    margin-bottom: 10px;
+    margin-left: 5px;
 }
 
 .remove-icon {

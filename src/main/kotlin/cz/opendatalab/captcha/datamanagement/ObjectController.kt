@@ -1,12 +1,11 @@
 package cz.opendatalab.captcha.datamanagement
 
-import cz.opendatalab.captcha.datamanagement.dto.LabelGroupCreateDTO
+import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
 import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroup
-import cz.opendatalab.captcha.datamanagement.dto.ObjectDTO
-import cz.opendatalab.captcha.datamanagement.dto.UrlObjectCreateDTO
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
+import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
 import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.data.repository.findByIdOrNull
@@ -20,7 +19,22 @@ import java.net.URI
 
 @RestController
 @RequestMapping("api/datamanagement/objects")
-class ObjectController(val metadataService: ObjectMetadataService) {
+class ObjectController(val metadataService: ObjectMetadataService, val objectService: ObjectService) {
+
+    @GetMapping
+    fun getDataObjects(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<DataObjectDTO> {
+        val metadata = metadataService.getAllAccessible(user.username).associateBy { it.objectId }
+        val ids = metadata.keys
+        val storageInfos = objectService.getInfoByIdList(ids)
+
+        val result = storageInfos.map { info ->
+            val storageDTO = ObjectStorageInfoDTO.from(info)
+            val metadataDTO = ObjectMetadataDTO.from(metadata[info.id]!!)
+            DataObjectDTO(metadataDTO, storageDTO)
+        }
+
+        return result
+    }
 
     @GetMapping("metadata")
     fun getObjectMetadata(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<ObjectMetadata> {
