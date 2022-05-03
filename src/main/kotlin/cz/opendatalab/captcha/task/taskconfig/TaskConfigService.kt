@@ -8,7 +8,7 @@ import java.io.File
 import java.net.URL
 
 @Service
-class TaskConfigService(val taskTemplateRouter: TaskTemplateRouter, val objectMapper: ObjectMapper) {
+class TaskConfigService(private val taskTemplateRouter: TaskTemplateRouter, private val objectMapper: ObjectMapper) {
     fun getTaskConfigSchema(taskName: String): JsonNode {
         val resource = (getResource(getResourcePath(taskName)) ?: getResource(getResourcePath("default")))!!
         return objectMapper.readTree(resource.readText())

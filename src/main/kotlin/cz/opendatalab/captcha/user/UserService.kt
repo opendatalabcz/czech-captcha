@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
 @Service
-class UserService(private val userRepo: UserRepository, val passwordEncoder: PasswordEncoder): UserDetailsService {
+class UserService(private val userRepo: UserRepository, private val passwordEncoder: PasswordEncoder): UserDetailsService {
     fun userExists(userName: String): Boolean {
         return userRepo.existsByUsername(userName)
     }

@@ -33,11 +33,6 @@ class UserController(val userService: UserService) {
     fun createUser(@RequestBody newPassword: String, @AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails) {
         userService.changePassword(newPassword, user.username)
     }
-
-    @GetMapping
-    fun getAllUserInfo(): List<UserInfoDTO> {
-        return userService.getUsers()
-    }
 }
 
 data class UserCredentials(val username: String, val password: String)

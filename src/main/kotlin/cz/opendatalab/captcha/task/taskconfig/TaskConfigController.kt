@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("api/taskconfig")
-class TaskConfigController(val taskConfigService: TaskConfigService) {
+class TaskConfigController(private val taskConfigService: TaskConfigService) {
 
     @GetMapping("tasks")
     fun getTasks(): List<String> {
