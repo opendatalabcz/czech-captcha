@@ -62,7 +62,7 @@ internal class UserServiceTest(@Autowired val userService: UserService,
         val user = UserData(username, "hashedOldPassword", emptyList())
         Mockito.`when`(userRepository.findByUsername(username)).thenReturn(user)
 
-        userService.changePassword(username, newPassword)
+        userService.changePassword(newPassword, username)
 
         Mockito.verify(userRepository).findByUsername(username)
         Mockito.verify(userRepository).save(isA(UserData::class.java))
