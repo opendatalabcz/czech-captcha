@@ -44,7 +44,7 @@ docker-compose build
 docker-compose -p captcha up -d
 
 # Stops the application
-docker compose -p captcha stop
+docker-compose -p captcha stop
 ```
 
 To run the application with default configuration, use the default configuration in .env-example file.
