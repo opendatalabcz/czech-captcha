@@ -9,6 +9,24 @@ value class Label(val label: String)
 open class LabelGroup(val name: String, val maxCardinality: Int) {
     open fun rangeContainsLabel(label: String): Boolean = true
     open fun rangeSize(): Int = Int.MAX_VALUE
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LabelGroup
+
+        if (name != other.name) return false
+        if (maxCardinality != other.maxCardinality) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + maxCardinality
+        return result
+    }
 }
 
 // contains (0..n) vs 1 labels, where n is labels size

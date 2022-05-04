@@ -39,29 +39,29 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     }
 
     fun getRandomWithLabel(objects: List<ObjectMetadata>, labelGroup: String, label: String, count: Int): List<ObjectMetadata> {
-        return selectRandom(getFilesWithLabel(objects, labelGroup, label), count)
+        return selectRandom(getObjectsWithLabel(objects, labelGroup, label), count)
     }
 
     fun getRandomWithoutLabel(objects: List<ObjectMetadata>, labelGroup: String, label: String, count: Int): List<ObjectMetadata> {
-        return selectRandom(getFilesWithoutLabel(objects, labelGroup, label), count)
+        return selectRandom(getObjectsWithoutLabel(objects, labelGroup, label), count)
     }
 
     fun getRandomNotKnowingLabel(objects: List<ObjectMetadata>, labelGroup: String, label: String, count: Int): List<ObjectMetadata> {
         return selectRandom(getObjectsNotKnowingLabel(objects, labelGroup, label), count)
     }
 
-    fun getFilesWithLabel(objects: List<ObjectMetadata>, labelGroupName: String, label: String): List<ObjectMetadata> {
+    fun getObjectsWithLabel(objects: List<ObjectMetadata>, labelGroupName: String, label: String): List<ObjectMetadata> {
         return objects.filter { it.containsLabel(labelGroupName, label) }
     }
 
-    fun getFilesWithoutLabel(objects: List<ObjectMetadata>, labelGroup: String, label: String): List<ObjectMetadata> {
-        return objectMetadataRepo.findAll().filter {
+    fun getObjectsWithoutLabel(objects: List<ObjectMetadata>, labelGroup: String, label: String): List<ObjectMetadata> {
+        return objects.filter {
             it.containsNegativeLabel(labelGroup, label)
         }
     }
 
     fun getObjectsNotKnowingLabel(objects: List<ObjectMetadata>, labelGroup: String, label: String): List<ObjectMetadata> {
-        return objectMetadataRepo.findAll().filter {
+        return objects.filter {
             it.containsUnresolvedLabel(labelGroup, label)
         }
     }
@@ -83,14 +83,11 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         if (labelGroupCreate.maxCardinality <= 0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group max cardinality must be positive number, found ${labelGroupCreate.maxCardinality}")
         }
+
         val labelGroup = if (labelGroupCreate.labels.isEmpty()) {
             labelGroupCreate.toUnlimitedLabelGroup()
         } else {
             labelGroupCreate.toLimitedLabelGroup()
-        }
-
-        if (labelGroupCreate.maxCardinality <= 0) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group max cardinality must be positive number, found ${labelGroupCreate.maxCardinality}")
         }
 
         if (labelGroupRepo.existsByName(labelGroup.name)) {
@@ -102,7 +99,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     fun labelObject(objectId: String, labelGroupName: String, label: String, positiveLabel: Boolean = true) {
         // first check validity
         val labelGroup = labelGroupRepo.findByName(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group with name $labelGroupName does not exist")
-        require(labelGroup.rangeContainsLabel(label)) // system issue
+        require(labelGroup.rangeContainsLabel(label))
 
         val metadata = objectMetadataRepo.findByObjectId(objectId) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Object with fileId $objectId not found")
         metadata.label(label, labelGroupName, positiveLabel, labelGroup.maxCardinality, labelGroup.rangeSize())

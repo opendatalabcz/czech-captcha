@@ -18,8 +18,6 @@ interface FileRepository {
 
     fun removeFile(path: String)
 
-//    fun getPath(name: String): String
-
     companion object {
         fun getFile(path: String, repoType: ObjectRepositoryType): InputStream {
             return getRepo(repoType).getFile(path)
@@ -32,10 +30,6 @@ interface FileRepository {
         fun removeFile(path: String, repoType: ObjectRepositoryType) {
             return getRepo(repoType).removeFile(path)
         }
-
-//        fun getPath(name: String, repoType: FileRepositoryType): String {
-//            return getRepo(repoType).getFile(name)
-//        }
 
         private fun getRepo(repoType: ObjectRepositoryType): FileRepository {
             return when(repoType) {
@@ -60,9 +54,4 @@ object UrlFileRepository : FileRepository {
     override fun removeFile(path: String) {
         // do nothing
     }
-
-
-//    override fun getPath(name: String): String {
-//        return name
-//    }
 }
