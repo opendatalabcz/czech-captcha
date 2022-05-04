@@ -1,8 +1,11 @@
 package cz.opendatalab.captcha.user
 
+import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupRepository
+import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataRepository
+import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
+import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-
 import org.mockito.ArgumentMatchers.isA
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +17,12 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @SpringBootTest
 internal class UserServiceTest(@Autowired val userService: UserService,
                                @Autowired val passwordEncoder: PasswordEncoder,
-                               @Autowired @MockBean val userRepository: UserRepository) {
+                               @Autowired @MockBean val userRepository: UserRepository,
+                               @Autowired @MockBean val catalog: ObjectCatalogue,
+                               @Autowired @MockBean val objectMetadataRepo: ObjectMetadataRepository,
+                               @Autowired @MockBean val siteConfigRepo: SiteConfigRepository,
+                               @Autowired @MockBean val labelGroupRepo: LabelGroupRepository
+) {
 
 
 

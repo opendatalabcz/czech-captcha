@@ -6,6 +6,8 @@ import cz.opendatalab.captcha.datamanagement.dto.TextFileTypeDTO
 import cz.opendatalab.captcha.datamanagement.dto.UrlObjectCreateDTO
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
+import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
+import cz.opendatalab.captcha.user.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -23,6 +25,8 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
                                             @MockBean @Autowired val objectCatalogue: ObjectCatalogue,
                                             @MockBean @Autowired val objectMetadataRepo: ObjectMetadataRepository,
                                             @MockBean @Autowired val labelRepo: LabelGroupRepository,
+                                            @Autowired @MockBean val userRepository: UserRepository,
+                                            @Autowired @MockBean val siteConfigRepo: SiteConfigRepository,
                                          ) {
     val user1 = "user1"
     val user2 = "user2"

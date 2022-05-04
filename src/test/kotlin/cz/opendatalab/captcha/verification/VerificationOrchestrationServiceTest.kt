@@ -1,10 +1,14 @@
 package cz.opendatalab.captcha.verification
 
+import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupRepository
+import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataRepository
+import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
 import cz.opendatalab.captcha.siteconfig.SiteConfig
 import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
 import cz.opendatalab.captcha.siteconfig.TaskConfig
 import cz.opendatalab.captcha.task.templates.EmptyGenerationConfig
 import cz.opendatalab.captcha.task.templates.TaskTemplateRouter
+import cz.opendatalab.captcha.user.UserRepository
 import cz.opendatalab.captcha.verification.dto.VerificationDTO
 import cz.opendatalab.captcha.verification.entities.Description
 import cz.opendatalab.captcha.verification.entities.Task
@@ -25,13 +29,17 @@ import java.time.Instant
 internal class VerificationOrchestrationServiceTest(@Autowired val verService: VerificationOrchestrationService,
                                                     @MockBean @Autowired val siteConfigRepo: SiteConfigRepository,
                                                     @Autowired val taskRepository: KeyValueStore<Task>,
-                                                    @Autowired val tokenRepository: KeyValueStore<Token>
+                                                    @Autowired val tokenRepository: KeyValueStore<Token>,
+                                                    @Autowired @MockBean val userRepository: UserRepository,
+                                                    @Autowired @MockBean val catalog: ObjectCatalogue,
+                                                    @Autowired @MockBean val objectMetadataRepo: ObjectMetadataRepository,
+                                                    @Autowired @MockBean val labelGroupRepo: LabelGroupRepository
                                                     ) {
 
     @Test
     fun generateTask() {
         val siteKey = "siteKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("NUMERIC_EQUATION", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, "secretKey", "user", "configName", taskConfig)
 
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
