@@ -1,9 +1,9 @@
 package cz.opendatalab.captcha.datamanagement
 
 import cz.opendatalab.captcha.datamanagement.dto.*
+import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroup
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
-import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroup
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import java.net.URI
 
@@ -44,6 +45,13 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
     @PostMapping("url")
     fun addURLObject(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody urlObject: UrlObjectCreateDTO): ResponseEntity<Unit> {
         val objectId = metadataService.addUrlObject(urlObject, user.username)
+        return ResponseEntity.created(URI.create("api/datamanagement/objects/$objectId")).build()
+    }
+
+    @PostMapping("file")
+    fun addFileObject(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestPart("file") file: MultipartFile,
+                      @RequestPart("fileObject") fileObject: FileObjectCreateDTO): ResponseEntity<Unit> {
+        val objectId = metadataService.addFileObject(file, fileObject, user.username)
         return ResponseEntity.created(URI.create("api/datamanagement/objects/$objectId")).build()
     }
 

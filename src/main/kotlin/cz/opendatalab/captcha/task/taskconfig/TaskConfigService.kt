@@ -23,6 +23,6 @@ class TaskConfigService(private val taskTemplateRouter: TaskTemplateRouter, priv
     }
 
     private fun getResourcePath(taskName: String): String {
-        return "${File.separator}taskconfigschemas${File.separator}${taskName}.json"
+        return "/taskconfigschemas/${taskName}.json"
     }
 }

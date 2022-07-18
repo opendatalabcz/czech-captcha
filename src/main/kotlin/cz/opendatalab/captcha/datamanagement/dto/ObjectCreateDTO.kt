@@ -1,19 +1,14 @@
 package cz.opendatalab.captcha.datamanagement.dto
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import cz.opendatalab.captcha.datamanagement.objectmetadata.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 
-//data class ObjectCreateDTO(val fileData: FileDataDTO, val fileType: FileTypeDTO, val metadata: FileMetadataDTO)
 data class UrlObjectCreateDTO(val url: String, val fileType: FileTypeDTO, val metadata: ObjectMetadataCreateDTO)
 
-data class ObjectDTO(val storageInfo: ObjectStorageInfo, val metadata: ObjectMetadata)
+data class FileObjectCreateDTO(val fileType: FileTypeDTO, val metadata: ObjectMetadataCreateDTO)
 
-//// Needed for abstract type deserialization
-//@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "storageType")
-//sealed class FileDataDTO(val storageType: String)
-//
-//data class URLFileDataDTO(val url: String): FileDataDTO("url")
+data class ObjectDTO(val storageInfo: ObjectStorageInfo, val metadata: ObjectMetadata)
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 sealed class FileTypeDTO {

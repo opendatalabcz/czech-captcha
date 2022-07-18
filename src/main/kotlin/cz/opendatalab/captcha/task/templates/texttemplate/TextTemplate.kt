@@ -59,7 +59,7 @@ object TextTemplate: TaskTemplate {
         val img = BufferedImage(width + 20, height + 20, BufferedImage.TYPE_INT_ARGB)
         drawImage(text, img, font)
 
-        val output = printImage(img).toByteArray()
+        val output = printImage(img).use { it.toByteArray() }
 
         return toBase64Image(toBase64String(output), format)
     }

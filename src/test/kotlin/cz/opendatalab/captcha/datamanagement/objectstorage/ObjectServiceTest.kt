@@ -8,8 +8,9 @@ import org.springframework.data.repository.findByIdOrNull
 
 internal class ObjectServiceTest {
 
+    private val maxSize = 1024
     private val objectCatalogue: ObjectCatalogue = mockk()
-    private val objectService = ObjectService(objectCatalogue)
+    private val objectService = ObjectService(objectCatalogue, maxSize)
 
 
     @Test

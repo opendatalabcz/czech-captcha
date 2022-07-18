@@ -1,11 +1,14 @@
 package cz.opendatalab.captcha.datamanagement.objectmetadata
 
 import cz.opendatalab.captcha.Utils.selectRandom
+import cz.opendatalab.captcha.datamanagement.dto.FileObjectCreateDTO
+import cz.opendatalab.captcha.datamanagement.dto.FileTypeDTO
 import cz.opendatalab.captcha.datamanagement.dto.LabelGroupCreateDTO
 import cz.opendatalab.captcha.datamanagement.dto.UrlObjectCreateDTO
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 
 @Service
@@ -110,7 +113,23 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     fun addUrlObject(urlObjectCreateDto: UrlObjectCreateDTO, user: String): String {
         val fileId = objectService.saveURLFile(user, urlObjectCreateDto.url)
 
-        val labels = urlObjectCreateDto.metadata.labels.mapValues { (labelGroupName, labels) ->
+        val metadata = createObjectMetadata(fileId, user, urlObjectCreateDto.fileType, urlObjectCreateDto.metadata.labels, urlObjectCreateDto.metadata.tags)
+        objectMetadataRepo.insert(metadata)
+
+        return fileId
+    }
+
+    fun addFileObject(file: MultipartFile, fileObjectCreateDTO: FileObjectCreateDTO, user: String): String {
+        val fileId = objectService.saveFile(user, file, fileObjectCreateDTO.fileType.toDomain())
+
+        val metadata = createObjectMetadata(fileId, user, fileObjectCreateDTO.fileType, fileObjectCreateDTO.metadata.labels, fileObjectCreateDTO.metadata.tags)
+        objectMetadataRepo.insert(metadata)
+
+        return fileId
+    }
+
+    private fun createObjectMetadata(fileId: String, user: String, fileType: FileTypeDTO, labelStrings: Map<String, List<String>>, tags: List<String>): ObjectMetadata {
+        val labels = labelStrings.mapValues { (labelGroupName, labels) ->
             val labelGroup =  labelGroupRepo.findByName(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group name  with name $labelGroupName does not exist")
             Labeling(labels.map { label ->
                 if (!labelGroup.rangeContainsLabel(label))
@@ -118,11 +137,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
                 label
             })
         }.toMutableMap()
-        val fileType = urlObjectCreateDto.fileType.toDomain()
 
-        val metadata = ObjectMetadata(fileId, user, fileType, labels, urlObjectCreateDto.metadata.tags)
-        objectMetadataRepo.insert(metadata)
-
-        return fileId
+        return ObjectMetadata(fileId, user, fileType.toDomain(), labels, tags)
     }
 }
