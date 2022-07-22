@@ -32,6 +32,9 @@ dependencies {
 
 	implementation("org.imgscalr:imgscalr-lib:4.2")
 
+	implementation("org.jetbrains.kotlinx:kotlin-deeplearning-onnx:0.4.0")
+	implementation("org.jetbrains.kotlinx:kotlin-deeplearning-api:0.4.0")
+
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.5")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
