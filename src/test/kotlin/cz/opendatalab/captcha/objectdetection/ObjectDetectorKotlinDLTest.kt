@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.objectdetection
 
+import cz.opendatalab.captcha.TestConfiguration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -13,7 +14,7 @@ internal class ObjectDetectorKotlinDLTest {
 
     @Test
     fun `detect person detected`() {
-        Thread.currentThread().contextClassLoader.getResourceAsStream(testImageName).use {
+        Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE).use {
             val image = ImageIO.read(it)
             val detected = objectDetector.detect(image)
             assertTrue(detected.isNotEmpty())
@@ -28,7 +29,6 @@ internal class ObjectDetectorKotlinDLTest {
 
     companion object {
         private val cachePath = Paths.get(System.getProperty("java.io.tmpdir"), "czech-captcha")
-        private const val testImageName = "test_image.jpg"
 
         @AfterAll
         @JvmStatic

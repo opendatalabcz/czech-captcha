@@ -55,6 +55,22 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
         return ResponseEntity.created(URI.create("api/datamanagement/objects/$objectId")).build()
     }
 
+    @PostMapping("image/url")
+    fun addURLImage(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody urlImage: UrlImageCreateDTO): ResponseEntity<List<URI>> {
+        val objectIds = metadataService.addUrlImage(urlImage, user.username)
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(objectIds.map{ id -> URI.create("api/datamanagement/objects/$id") })    }
+
+    @PostMapping("image/file")
+    fun addFileImage(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestPart("file") file: MultipartFile,
+                      @RequestPart("fileImage") fileImage: FileImageCreateDTO): ResponseEntity<List<URI>> {
+        val objectIds = metadataService.addFileImage(file, fileImage, user.username)
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(objectIds.map{ id -> URI.create("api/datamanagement/objects/$id") })
+    }
+
     @GetMapping("labelgroups")
     fun getLabelGroup(): List<LabelGroup> {
         return metadataService.getLabelGroups()

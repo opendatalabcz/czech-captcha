@@ -1,19 +1,20 @@
 package cz.opendatalab.captcha.datamanagement.objectstorage
 
 import cz.opendatalab.captcha.Utils.generateUniqueId
-import cz.opendatalab.captcha.Utils.getFileExtension
+import cz.opendatalab.captcha.datamanagement.objectmetadata.ImageObjectType
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectType
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectTypeEnum
+import cz.opendatalab.captcha.datamanagement.objectmetadata.SoundObjectType
 import org.imgscalr.Scalr
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.mock.web.MockMultipartFile
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import javax.imageio.ImageIO
+
 
 @Service
 class ObjectService(
@@ -32,14 +33,17 @@ class ObjectService(
     }
 
     fun saveFile(user: String, file: MultipartFile, objectType: ObjectType): String {
+        if (objectType is ImageObjectType) {
+            val image = file.inputStream.use { ImageIO.read(it) }
+            return saveImageFile(image, objectType.format, user)
+        }
         val fileRepositoryType = ObjectRepositoryType.FILESYSTEM
         val id = generateUniqueId()
+        val fileName = id + getFileExtension(objectType, file.originalFilename)
 
-        val editedFile = if (objectType.type() == ObjectTypeEnum.IMAGE) resizeImage(file) else file
+        FileRepository.saveFile(file.inputStream, fileName, fileRepositoryType)
 
-        val path = FileRepository.saveFile(editedFile, id, fileRepositoryType)
-
-        val toBeAdded = ObjectStorageInfo(id, user, path, fileRepositoryType)
+        val toBeAdded = ObjectStorageInfo(id, user, fileName, fileRepositoryType)
         objectCatalogue.insert(toBeAdded)
 
         return toBeAdded.id
@@ -47,6 +51,25 @@ class ObjectService(
 
     fun saveURLFile(user: String, url: String): String {
         val toBeAdded = ObjectStorageInfo(generateUniqueId(), user, url, ObjectRepositoryType.URL)
+        objectCatalogue.insert(toBeAdded)
+
+        return toBeAdded.id
+    }
+    
+    fun saveImageFile(image: BufferedImage, imageFormat: String, user: String): String {
+        val fileRepositoryType = ObjectRepositoryType.FILESYSTEM
+        val id = generateUniqueId()
+        val fileName = "$id.$imageFormat"
+
+        // resize image
+        val resizedImage = Scalr.resize(image, maxSize)
+        val outputStream = ByteArrayOutputStream()
+        ImageIO.write(resizedImage, imageFormat, outputStream)
+        val inputStream = ByteArrayInputStream(outputStream.toByteArray())
+
+        FileRepository.saveFile(inputStream, fileName, fileRepositoryType)
+
+        val toBeAdded = ObjectStorageInfo(id, user, fileName, fileRepositoryType)
         objectCatalogue.insert(toBeAdded)
 
         return toBeAdded.id
@@ -60,16 +83,18 @@ class ObjectService(
         }
     }
 
-    private fun resizeImage(file: MultipartFile): MultipartFile {
-        val originalImage: BufferedImage
-        file.inputStream.use {
-            originalImage = ImageIO.read(it)
-        }
-        val resizedImage: BufferedImage = Scalr.resize(originalImage, maxSize)
-
-        return ByteArrayOutputStream().use {
-            ImageIO.write(resizedImage, getFileExtension(file.originalFilename), it)
-            MockMultipartFile(file.name, file.originalFilename, file.contentType, it.toByteArray())
+    private fun getFileExtension(objectType: ObjectType, filename: String?): String {
+        when (objectType) {
+            is ImageObjectType -> return objectType.format
+            is SoundObjectType -> return objectType.format
+            else -> {
+                filename ?: return ""
+                val index = filename.lastIndexOf('.')
+                if (index > 0) {
+                    return filename.substring(index)
+                }
+                return ""
+            }
         }
     }
 }

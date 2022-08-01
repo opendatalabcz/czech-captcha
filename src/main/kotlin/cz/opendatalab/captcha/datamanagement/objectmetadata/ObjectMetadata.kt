@@ -10,11 +10,11 @@ import org.springframework.data.mongodb.core.mapping.Document
 // labels ... <labelGroupName, Lableling>
 @Document("objectmetadata")
 data class ObjectMetadata(@Id val objectId: String, val user: String, val objectType: ObjectType, val labels: MutableMap<String,Labeling>,
-                          val templateData: Map<String, OtherMetadataType>, val tags: List<String>) {
+                          val templateData: MutableMap<String, OtherMetadataType>, val tags: List<String>) {
     constructor(objectId: String, user: String, objectType: ObjectType): this(objectId, user, objectType, mutableMapOf())
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroup: Pair<String, Labeling>): this(objectId, user, objectType, mutableMapOf(labelGroup))
     constructor(objectId: String, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>): this(objectId, user, objectType, labelGroups, emptyList())
-    constructor(objectId: String, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>, tags: List<String>): this(objectId, user, objectType, labelGroups, emptyMap(), tags)
+    constructor(objectId: String, user: String, objectType: ObjectType, labelGroups: MutableMap<String, Labeling>, tags: List<String>): this(objectId, user, objectType, labelGroups, mutableMapOf(), tags)
 
     fun label(label: String, labelGroupName: String, positive: Boolean, maxCardinality: Int, labelRangeSize: Int) {
         val labeling = labels.putIfAbsent(labelGroupName, Labeling()) ?: labels[labelGroupName]!!
@@ -63,3 +63,7 @@ object TextObjectType: ObjectType {
 }
 
 interface OtherMetadataType
+
+data class ParentFile(val id: String): OtherMetadataType
+
+data class ChildrenFiles(val ids: MutableList<String>): OtherMetadataType

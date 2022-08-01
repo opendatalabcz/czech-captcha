@@ -1,20 +1,21 @@
 package cz.opendatalab.captcha.datamanagement.objectmetadata
 
 import cz.opendatalab.captcha.Utils.selectRandom
-import cz.opendatalab.captcha.datamanagement.dto.FileObjectCreateDTO
-import cz.opendatalab.captcha.datamanagement.dto.FileTypeDTO
-import cz.opendatalab.captcha.datamanagement.dto.LabelGroupCreateDTO
-import cz.opendatalab.captcha.datamanagement.dto.UrlObjectCreateDTO
+import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
+import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
+import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
+import kotlin.math.abs
 
 @Service
 class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataRepository,
                             private val objectService: ObjectService,
-                            private val labelGroupRepo: LabelGroupRepository
+                            private val labelGroupRepo: LabelGroupRepository,
+                            private val objectDetectionService: ObjectDetectionService
                             ) {
     fun getAll(): List<ObjectMetadata> {
         return objectMetadataRepo.findAll()
@@ -113,7 +114,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     fun addUrlObject(urlObjectCreateDto: UrlObjectCreateDTO, user: String): String {
         val fileId = objectService.saveURLFile(user, urlObjectCreateDto.url)
 
-        val metadata = createObjectMetadata(fileId, user, urlObjectCreateDto.fileType, urlObjectCreateDto.metadata.labels, urlObjectCreateDto.metadata.tags)
+        val metadata = createObjectMetadata(fileId, user, urlObjectCreateDto.fileType.toDomain(), urlObjectCreateDto.metadata.labels, urlObjectCreateDto.metadata.tags)
         objectMetadataRepo.insert(metadata)
 
         return fileId
@@ -122,13 +123,123 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     fun addFileObject(file: MultipartFile, fileObjectCreateDTO: FileObjectCreateDTO, user: String): String {
         val fileId = objectService.saveFile(user, file, fileObjectCreateDTO.fileType.toDomain())
 
-        val metadata = createObjectMetadata(fileId, user, fileObjectCreateDTO.fileType, fileObjectCreateDTO.metadata.labels, fileObjectCreateDTO.metadata.tags)
+        val metadata = createObjectMetadata(fileId, user, fileObjectCreateDTO.fileType.toDomain(), fileObjectCreateDTO.metadata.labels, fileObjectCreateDTO.metadata.tags)
         objectMetadataRepo.insert(metadata)
 
         return fileId
     }
 
-    private fun createObjectMetadata(fileId: String, user: String, fileType: FileTypeDTO, labelStrings: Map<String, List<String>>, tags: List<String>): ObjectMetadata {
+    fun addUrlImage(urlImageCreateDTO: UrlImageCreateDTO, user: String): List<String> {
+        checkObjectDetectionParameters(urlImageCreateDTO.objectDetection)
+
+        val imageFileTypeDTO = urlImageCreateDTO.fileType
+        val tags = urlImageCreateDTO.metadata.tags
+
+        val parentId = objectService.saveURLFile(user, urlImageCreateDTO.url)
+        val parentMetadata = createObjectMetadata(parentId, user, imageFileTypeDTO.toDomain(), urlImageCreateDTO.metadata.labels, tags)
+        objectMetadataRepo.insert(parentMetadata)
+
+        return processWantedLabels(urlImageCreateDTO.objectDetection, imageFileTypeDTO, user, tags, parentMetadata)
+    }
+
+    fun addFileImage(file: MultipartFile, fileImageCreateDTO: FileImageCreateDTO, user: String): List<String> {
+        checkObjectDetectionParameters(fileImageCreateDTO.objectDetection)
+
+        val imageFileTypeDTO = fileImageCreateDTO.fileType
+        val tags = fileImageCreateDTO.metadata.tags
+
+        val parentId = objectService.saveFile(user, file, fileImageCreateDTO.fileType.toDomain())
+        val parentMetadata = createObjectMetadata(parentId, user, imageFileTypeDTO.toDomain(), fileImageCreateDTO.metadata.labels, tags)
+        objectMetadataRepo.insert(parentMetadata)
+
+        return processWantedLabels(fileImageCreateDTO.objectDetection, imageFileTypeDTO, user, tags, parentMetadata)
+    }
+
+    private fun checkObjectDetectionParameters(objectDetectionParametersDTO: ObjectDetectionParametersDTO) {
+        checkThresholds(objectDetectionParametersDTO.thresholdOneVote, objectDetectionParametersDTO.thresholdTwoVotes)
+        checkLabelsExist(objectDetectionParametersDTO.wantedLabels)
+    }
+
+    private fun checkThresholds(thresholdOneVote: Double, thresholdTwoVotes: Double) {
+        if (thresholdOneVote < 0.0 || thresholdOneVote > 1.0) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "thresholdOneVote must be between 0 and 1. Currently set: $thresholdOneVote")
+        }
+        if (thresholdTwoVotes < 0.0 || thresholdTwoVotes > 1.0) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "thresholdTwoVotes must be between 0 and 1. Currently set: $thresholdTwoVotes")
+        }
+        if (thresholdTwoVotes < thresholdOneVote) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "thresholdTwoVotes cannot be smaller than thresholdOneVote")
+        }
+    }
+
+    private fun checkLabelsExist(labels: Map<String, List<String>>) {
+        for ((labelGroupName, labelList) in labels) {
+            val labelGroup = getLabelGroup(labelGroupName) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Label group $labelGroupName not found")
+            for (label in labelList) {
+                if (!labelGroup.rangeContainsLabel(label)) {
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Label $label not found in label group $labelGroupName")
+                }
+            }
+        }
+    }
+
+    private fun processWantedLabels(
+        objectDetectionParametersDTO: ObjectDetectionParametersDTO,
+        imageFileTypeDTO: ImageFileTypeDTO,
+        user: String,
+        tags: List<String>,
+        parentMetadata: ObjectMetadata
+    ): MutableList<String> {
+        val ids = mutableListOf<String>()
+        for ((labelGroupName, labelList) in objectDetectionParametersDTO.wantedLabels) {
+            if (labelGroupName == ObjectDetectionConstants.LABEL_GROUP) {
+                val detectedImages = objectDetectionService.detectObjects(
+                    parentMetadata.objectId, imageFileTypeDTO.format, user, labelList)
+                for (detectedImage in detectedImages) {
+                    val labeling = calculateLabeling(detectedImage.labels,
+                        objectDetectionParametersDTO.thresholdOneVote, objectDetectionParametersDTO.thresholdTwoVotes)
+                    val childMetadata = ObjectMetadata(
+                        detectedImage.id, user, imageFileTypeDTO.toDomain(),
+                        mutableMapOf(ObjectDetectionConstants.LABEL_GROUP to labeling),
+                        mutableMapOf(PARENT_FILE_TEMPLATE_NAME to ParentFile(parentMetadata.objectId)), tags
+                    )
+                    objectMetadataRepo.insert(childMetadata)
+                    ids.add(detectedImage.id)
+                }
+                if (detectedImages.isNotEmpty()) {
+                    parentMetadata.templateData[CHILDREN_FILES_TEMPLATE_NAME] = ChildrenFiles(ids.toMutableList())
+                }
+            } else {
+                // todo add data for object detection task
+            }
+        }
+        objectMetadataRepo.save(parentMetadata)
+        ids.add(parentMetadata.objectId)
+        return ids
+    }
+
+    private fun calculateLabeling(labels: Map<String, Double>, thresholdOneVote: Double, thresholdTwoVotes: Double): Labeling {
+        val labelStatistics = LabelStatistics()
+        for (label in objectDetectionService.getSupportedLabels()) {
+            val probability = labels[label] ?: -1.0
+            val statisticValue = if (probability > thresholdTwoVotes) {
+                2
+            } else if (probability > thresholdOneVote) {
+                1
+            } else if (probability > 0.0) {
+                0
+            } else {
+                -1
+            }
+            labelStatistics.statistics[label] = LabelStatistic(statisticValue, abs(statisticValue))
+        }
+        return Labeling(false, emptyList(), emptyList(), labelStatistics)
+    }
+
+    private fun createObjectMetadata(fileId: String, user: String, objectType: ObjectType, labelStrings: Map<String, List<String>>, tags: List<String>): ObjectMetadata {
         val labels = labelStrings.mapValues { (labelGroupName, labels) ->
             val labelGroup =  labelGroupRepo.findByName(labelGroupName) ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group name  with name $labelGroupName does not exist")
             Labeling(labels.map { label ->
@@ -138,6 +249,11 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
             })
         }.toMutableMap()
 
-        return ObjectMetadata(fileId, user, fileType.toDomain(), labels, tags)
+        return ObjectMetadata(fileId, user, objectType, labels, tags)
+    }
+
+    companion object {
+        const val PARENT_FILE_TEMPLATE_NAME = "parentFile"
+        const val CHILDREN_FILES_TEMPLATE_NAME = "childrenFiles"
     }
 }

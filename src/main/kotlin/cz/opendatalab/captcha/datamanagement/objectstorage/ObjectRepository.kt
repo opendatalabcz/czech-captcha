@@ -1,9 +1,7 @@
 package cz.opendatalab.captcha.datamanagement.objectstorage
 
-import cz.opendatalab.captcha.Utils.getFileExtension
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.springframework.http.HttpStatus
-import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
 import java.io.InputStream
 import java.net.URL
@@ -22,7 +20,7 @@ interface FileRepository {
     /**
      * @returns path
      */
-    fun saveFile(content: MultipartFile, name: String): String
+    fun saveFile(content: InputStream, name: String): String
 
     fun removeFile(path: String)
 
@@ -31,7 +29,7 @@ interface FileRepository {
             return getRepo(repoType).getFile(path)
         }
 
-        fun saveFile(content: MultipartFile, name: String, repoType: ObjectRepositoryType): String {
+        fun saveFile(content: InputStream, name: String, repoType: ObjectRepositoryType): String {
             return getRepo(repoType).saveFile(content, name)
         }
 
@@ -56,7 +54,7 @@ object UrlFileRepository : FileRepository {
         return url.openStream()
     }
 
-    override fun saveFile(content: MultipartFile, name: String): String {
+    override fun saveFile(content: InputStream, name: String): String {
         return name
     }
 
@@ -68,14 +66,18 @@ object UrlFileRepository : FileRepository {
 object FilesystemFileRepository : FileRepository {
 
     private const val DATA_PATH_PROPERTY = "datamanagement.filesystem.data-path"
+    private const val MAX_FILES_IN_DIR_PROPERTY = "datamanagement.filesystem.max-files-per-dir"
 
     private val DATA_PATH: Path
+    private val MAX_FILES_IN_DIR: Int
 
-    private const val MAX_FILES_IN_DIR = 10000
-
-    init { // load DATA_PATH from application.properties - object is not managed by Spring
+    init { // load data from application.properties - object is not managed by Spring
         val config = PropertiesConfiguration()
         config.load("application.properties")
+
+        MAX_FILES_IN_DIR = config.getInteger(MAX_FILES_IN_DIR_PROPERTY, null)
+            ?: throw IllegalStateException("$MAX_FILES_IN_DIR_PROPERTY not provided in application.properties")
+
         val pathStr = config.getString(DATA_PATH_PROPERTY)
             ?: throw IllegalStateException("$DATA_PATH_PROPERTY not provided in application.properties")
         DATA_PATH = Paths.get(pathStr)
@@ -89,10 +91,9 @@ object FilesystemFileRepository : FileRepository {
         return Files.newInputStream(filePath)
     }
 
-    override fun saveFile(content: MultipartFile, name: String): String {
-        val fileName = name + getFileExtension(content.originalFilename)
-        saveFileBalancingDirs(content, DATA_PATH, fileName)
-        return fileName
+    override fun saveFile(content: InputStream, name: String): String {
+        saveFileBalancingDirs(content, DATA_PATH, name)
+        return name
     }
 
     override fun removeFile(path: String) {
@@ -104,7 +105,7 @@ object FilesystemFileRepository : FileRepository {
      * Saves content of a file to the specified directory or a subdirectory so that no directory contains more than
      * MAX_FILES_IN_DIR files. Subdirectories are created from the first letter of the filename if needed.
      */
-    private fun saveFileBalancingDirs(content: MultipartFile, dir: Path, filename: String) {
+    private fun saveFileBalancingDirs(content: InputStream, dir: Path, filename: String) {
         val subDirName = filename[0].toString()
         val subFilename = filename.substring(1)
         val subDir = dir.resolve(subDirName)
@@ -113,28 +114,30 @@ object FilesystemFileRepository : FileRepository {
             return
         }
 
-        val directoryStream = Files.newDirectoryStream(dir)
-        val filesInDir = directoryStream.count()
-        if ( filesInDir < MAX_FILES_IN_DIR ) {
+        val filesInDir = Files.newDirectoryStream(dir).use {
+            it.count()
+        }
+        if ( filesInDir < MAX_FILES_IN_DIR || subFilename.startsWith('.') ) {
             saveFileToDir(content, dir, filename)
-            directoryStream.close()
             return
         }
 
         Files.createDirectory(subDir)
         saveFileToDir(content, subDir, subFilename)
-        for (source in directoryStream) {
-            if ( Files.isRegularFile(source) && source.fileName.startsWith(subDirName) ) {
-                val destination = subDir.resolve(source.fileName.toString().substring(1))
-                Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING)
+        Files.newDirectoryStream(dir).use {
+            for (source in it) {
+                if (Files.isRegularFile(source) && source.fileName.toString().startsWith(subDirName)) {
+                    val destination = subDir.resolve(source.fileName.toString().substring(1))
+                    Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING)
+                }
             }
         }
-        directoryStream.close()
     }
 
-    private fun saveFileToDir(content: MultipartFile, path: Path, filename: String) {
+    private fun saveFileToDir(content: InputStream, path: Path, filename: String) {
         val finalPath = path.resolve(filename)
-        content.inputStream.use { Files.copy(it, finalPath, StandardCopyOption.REPLACE_EXISTING) }
+        Files.copy(content, finalPath, StandardCopyOption.REPLACE_EXISTING)
+        content.close()
     }
 
     private fun findFile(dir: Path, filename: String): Path? {
