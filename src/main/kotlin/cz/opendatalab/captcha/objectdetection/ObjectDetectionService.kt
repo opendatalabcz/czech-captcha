@@ -31,7 +31,7 @@ class ObjectDetectionService(private val objectService: ObjectService,
     ): List<DetectedImage> {
         val result = mutableListOf<DetectedImage>()
         for (obj in detectedObjects) {
-            val croppedImage = Scalr.crop(image, obj.x, obj.y, obj.width, obj.height)
+            val croppedImage = Scalr.crop(image, obj.boundingBox.x, obj.boundingBox.y, obj.boundingBox.width, obj.boundingBox.height)
             val id = objectService.saveImageFile(croppedImage, imageFormat, user)
             // todo add overlapping objects
             result.add(DetectedImage(id, mapOf(obj.label to obj.probability)))

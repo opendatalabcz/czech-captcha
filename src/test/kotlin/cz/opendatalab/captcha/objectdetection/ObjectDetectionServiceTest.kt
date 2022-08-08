@@ -25,8 +25,8 @@ internal class ObjectDetectionServiceTest {
     private val probability1 = 0.9
     private val probability2 = 0.7
     private val detectedObjects = listOf(
-        DetectedObject(person, probability1, 10, 10, 10, 10),
-        DetectedObject(car, probability2, 20, 20, 20, 20)
+        DetectedObject(person, probability1, BoundingBox(10, 10, 10, 10)),
+        DetectedObject(car, probability2, BoundingBox(20, 20, 20, 20))
     )
 
     @Test

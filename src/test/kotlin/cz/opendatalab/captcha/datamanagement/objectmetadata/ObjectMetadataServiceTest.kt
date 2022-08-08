@@ -5,6 +5,9 @@ import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.objectdetection.DetectedImage
 import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
 import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectLocalizationData
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -139,12 +142,19 @@ internal class ObjectMetadataServiceTest {
         val odLabel1 = "odLabel1"
         val odLabel2 = "odLabel2"
         val odLabels = listOf(odLabel1, odLabel2)
-        val wantedLabels = listOf(odLabel1)
+        val nonOdLabelGroup = "nonOdLabelGroup"
+        val nonOdLabel = "nonOdLabel"
+        val odWantedLabels = listOf(odLabel1)
+        val nonOdWantedLabels = listOf(nonOdLabel)
         val parentMetadata = ObjectMetadata(uuid, user, ImageObjectType(jpg),
             mutableMapOf(knownLabelGroup to Labeling(knownLabels)), tags)
         val parentMetadataWithChild = ObjectMetadata(uuid, user, ImageObjectType(jpg),
             mutableMapOf(knownLabelGroup to Labeling(knownLabels)),
-            mutableMapOf(ObjectMetadataService.CHILDREN_FILES_TEMPLATE_NAME to ChildrenFiles(mutableListOf(childId1))), tags)
+            mutableMapOf(
+                ObjectMetadataService.CHILDREN_FILES_TEMPLATE_NAME to ChildrenFiles(mutableListOf(childId1)),
+                ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectDetectingData(
+                    mutableMapOf(nonOdLabelGroup to mutableMapOf(nonOdLabel to ObjectLocalizationData(false, emptyList(), mutableListOf())))
+                )), tags)
         val childLabeling = Labeling(false, emptyList(), emptyList(), LabelStatistics(
             mutableMapOf(odLabel1 to LabelStatistic(1, 1), odLabel2 to LabelStatistic(-1, 1))
         ))
@@ -155,6 +165,8 @@ internal class ObjectMetadataServiceTest {
 
         every { labelGroupRepository.findByName(ObjectDetectionConstants.LABEL_GROUP) } returns
                 LabelGroupLimited(ObjectDetectionConstants.LABEL_GROUP, odLabels, 1)
+        every { labelGroupRepository.findByName(nonOdLabelGroup) } returns
+                LabelGroupLimited(nonOdLabelGroup, nonOdWantedLabels, 1)
         every { objectService.saveFile(user, file, ImageObjectType(jpg)) } returns
                 uuid
         every { objectService.saveURLFile(user, url) } returns
@@ -163,7 +175,7 @@ internal class ObjectMetadataServiceTest {
                 LabelGroupLimited(knownLabelGroup, allKnownLabels, 1)
         every { objectMetadataRepo.insert(parentMetadata) } returns
                 parentMetadata
-        every { objectDetectionService.detectObjects(uuid, jpg, user, wantedLabels) } returns
+        every { objectDetectionService.detectObjects(uuid, jpg, user, odWantedLabels) } returns
                 listOf(DetectedImage(childId1, mapOf(odLabel1 to 0.81)))
         every { objectDetectionService.getSupportedLabels() } returns
                 odLabels.toSet()
@@ -175,14 +187,16 @@ internal class ObjectMetadataServiceTest {
         val result = if (urlImage) {
             objectMetadataService.addUrlImage(UrlImageCreateDTO(url, ImageFileTypeDTO(jpg),
                 ObjectMetadataCreateDTO(mapOf(knownLabelGroup to knownLabels), tags),
-                ObjectDetectionParametersDTO(mapOf(ObjectDetectionConstants.LABEL_GROUP to wantedLabels), 0.8, 0.9)
+                ObjectDetectionParametersDTO(mapOf(ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
+                    nonOdLabelGroup to nonOdWantedLabels), 0.8, 0.9)
             ), user)
         } else {
             objectMetadataService.addFileImage(
                 file, FileImageCreateDTO(
                     ImageFileTypeDTO(jpg),
                     ObjectMetadataCreateDTO(mapOf(knownLabelGroup to knownLabels), tags),
-                    ObjectDetectionParametersDTO(mapOf(ObjectDetectionConstants.LABEL_GROUP to wantedLabels), 0.8, 0.9)
+                    ObjectDetectionParametersDTO(mapOf(ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
+                        nonOdLabelGroup to nonOdWantedLabels), 0.8, 0.9)
                 ), user)
         }
         assertEquals(listOf(childId1, uuid), result)
@@ -193,8 +207,9 @@ internal class ObjectMetadataServiceTest {
             verify { objectService.saveFile(user, file, ImageObjectType(jpg)) }
         }
         verify { labelGroupRepository.findByName(ObjectDetectionConstants.LABEL_GROUP) }
+        verify { labelGroupRepository.findByName(nonOdLabelGroup) }
         verify { objectMetadataRepo.insert(parentMetadataWithChild) } // metadata is changed after insertion
-        verify { objectDetectionService.detectObjects(uuid, jpg, user, wantedLabels) }
+        verify { objectDetectionService.detectObjects(uuid, jpg, user, odWantedLabels) }
         verify { objectDetectionService.getSupportedLabels() }
         verify { objectMetadataRepo.insert(childMetadata) }
         verify { objectMetadataRepo.save(parentMetadataWithChild) }

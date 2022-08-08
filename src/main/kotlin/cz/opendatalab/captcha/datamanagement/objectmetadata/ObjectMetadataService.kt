@@ -5,6 +5,9 @@ import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
 import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectLocalizationData
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -192,33 +195,74 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         user: String,
         tags: List<String>,
         parentMetadata: ObjectMetadata
-    ): MutableList<String> {
+    ): List<String> {
         val ids = mutableListOf<String>()
-        for ((labelGroupName, labelList) in objectDetectionParametersDTO.wantedLabels) {
-            if (labelGroupName == ObjectDetectionConstants.LABEL_GROUP) {
-                val detectedImages = objectDetectionService.detectObjects(
-                    parentMetadata.objectId, imageFileTypeDTO.format, user, labelList)
-                for (detectedImage in detectedImages) {
-                    val labeling = calculateLabeling(detectedImage.labels,
-                        objectDetectionParametersDTO.thresholdOneVote, objectDetectionParametersDTO.thresholdTwoVotes)
-                    val childMetadata = ObjectMetadata(
-                        detectedImage.id, user, imageFileTypeDTO.toDomain(),
-                        mutableMapOf(ObjectDetectionConstants.LABEL_GROUP to labeling),
-                        mutableMapOf(PARENT_FILE_TEMPLATE_NAME to ParentFile(parentMetadata.objectId)), tags
-                    )
-                    objectMetadataRepo.insert(childMetadata)
-                    ids.add(detectedImage.id)
-                }
-                if (detectedImages.isNotEmpty()) {
-                    parentMetadata.templateData[CHILDREN_FILES_TEMPLATE_NAME] = ChildrenFiles(ids.toMutableList())
-                }
+        for ((wantedLabelGroup, wantedLabels) in objectDetectionParametersDTO.wantedLabels) {
+            if (wantedLabelGroup == ObjectDetectionConstants.LABEL_GROUP) {
+                val detectedIds = detectObjects(
+                    parentMetadata,
+                    imageFileTypeDTO,
+                    user,
+                    wantedLabels,
+                    objectDetectionParametersDTO.thresholdOneVote,
+                    objectDetectionParametersDTO.thresholdTwoVotes,
+                    tags
+                )
+                ids.addAll(detectedIds)
             } else {
-                // todo add data for object detection task
+                addDataForObjectDetectingTask(parentMetadata, wantedLabelGroup, wantedLabels)
             }
         }
         objectMetadataRepo.save(parentMetadata)
         ids.add(parentMetadata.objectId)
         return ids
+    }
+
+    private fun detectObjects(
+        parentMetadata: ObjectMetadata,
+        imageFileTypeDTO: ImageFileTypeDTO,
+        user: String,
+        wantedLabels: List<String>,
+        thresholdOneVote: Double,
+        thresholdTwoVotes: Double,
+        tags: List<String>
+    ): List<String> {
+        val detectedImages = objectDetectionService.detectObjects(
+            parentMetadata.objectId, imageFileTypeDTO.format, user, wantedLabels
+        )
+        for (detectedImage in detectedImages) {
+            val labeling = calculateLabeling(
+                detectedImage.labels,
+                thresholdOneVote, thresholdTwoVotes
+            )
+            val childMetadata = ObjectMetadata(
+                detectedImage.id, user, imageFileTypeDTO.toDomain(),
+                mutableMapOf(ObjectDetectionConstants.LABEL_GROUP to labeling),
+                mutableMapOf(PARENT_FILE_TEMPLATE_NAME to ParentFile(parentMetadata.objectId)), tags
+            )
+            objectMetadataRepo.insert(childMetadata)
+        }
+        val ids = detectedImages.map { it.id }
+        if (detectedImages.isNotEmpty()) {
+            parentMetadata.templateData[CHILDREN_FILES_TEMPLATE_NAME] = ChildrenFiles(ids.toMutableList())
+        }
+        return ids
+    }
+
+    private fun addDataForObjectDetectingTask(
+        parentMetadata: ObjectMetadata,
+        labelGroupName: String,
+        labelList: List<String>
+    ) {
+        parentMetadata.templateData.putIfAbsent(
+            ObjectDetectingConstants.TEMPLATE_DATA_NAME,
+            ObjectDetectingData(mutableMapOf())
+        )
+        val objectDetectingData =
+            parentMetadata.templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME]!! as ObjectDetectingData
+        objectDetectingData.objects[labelGroupName] =
+            mutableMapOf(*labelList.map { it to ObjectLocalizationData(false, emptyList(), mutableListOf()) }
+                .toTypedArray())
     }
 
     private fun calculateLabeling(labels: Map<String, Double>, thresholdOneVote: Double, thresholdTwoVotes: Double): Labeling {
@@ -253,7 +297,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     }
 
     companion object {
-        const val PARENT_FILE_TEMPLATE_NAME = "parentFile"
-        const val CHILDREN_FILES_TEMPLATE_NAME = "childrenFiles"
+        const val PARENT_FILE_TEMPLATE_NAME = "parent-file"
+        const val CHILDREN_FILES_TEMPLATE_NAME = "children-files"
     }
 }
