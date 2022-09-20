@@ -36,7 +36,7 @@ internal class ObjectRepositoryTest {
 
     @Test
     fun getUrlFile() {
-        val url = Path.of("src/test/resources/test_image.jpg").toUri().toURL().toString()
+        val url = Path.of("src/test/resources/test_image_1.jpg").toUri().toURL().toString()
         val result = FileRepository.getFile(url, ObjectRepositoryType.URL)
         assertNotNull(result)
         result?.close()

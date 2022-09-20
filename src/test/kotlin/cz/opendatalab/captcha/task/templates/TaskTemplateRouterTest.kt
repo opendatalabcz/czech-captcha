@@ -5,16 +5,10 @@ import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataReposi
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
 import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
 import cz.opendatalab.captcha.user.UserRepository
-import cz.opendatalab.captcha.verification.AnswerSheet
-import cz.opendatalab.captcha.verification.AnswerType
-import cz.opendatalab.captcha.verification.EmptyDisplayData
-import cz.opendatalab.captcha.verification.TextAnswer
-import cz.opendatalab.captcha.verification.entities.TextData
-import org.junit.jupiter.api.Test
-
+import cz.opendatalab.captcha.verification.entities.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -66,6 +60,6 @@ internal class TaskTemplateRouterTest(@Autowired val router: TaskTemplateRouter,
     @Test
     fun getTaskTypes() {
         val taskTypes = router.getTaskTypes()
-        assertThat(taskTypes.size).isEqualTo(3)
+        assertThat(taskTypes.size).isEqualTo(4)
     }
 }

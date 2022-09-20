@@ -7,7 +7,7 @@ import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
 import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectLocalizationData
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectsDetectingData
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -152,8 +152,8 @@ internal class ObjectMetadataServiceTest {
             mutableMapOf(knownLabelGroup to Labeling(knownLabels)),
             mutableMapOf(
                 ObjectMetadataService.CHILDREN_FILES_TEMPLATE_NAME to ChildrenFiles(mutableListOf(childId1)),
-                ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectDetectingData(
-                    mutableMapOf(nonOdLabelGroup to mutableMapOf(nonOdLabel to ObjectLocalizationData(false, emptyList(), mutableListOf())))
+                ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectsDetectingData(
+                    mutableMapOf(nonOdLabelGroup to mutableMapOf(nonOdLabel to ObjectDetectingData(false, mutableListOf(), mutableListOf())))
                 )), tags)
         val childLabeling = Labeling(false, emptyList(), emptyList(), LabelStatistics(
             mutableMapOf(odLabel1 to LabelStatistic(1, 1), odLabel2 to LabelStatistic(-1, 1))

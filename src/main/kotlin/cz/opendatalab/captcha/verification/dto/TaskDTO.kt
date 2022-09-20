@@ -1,6 +1,6 @@
 package cz.opendatalab.captcha.verification.dto
 
-import cz.opendatalab.captcha.verification.AnswerSheet
+import cz.opendatalab.captcha.verification.entities.AnswerSheet
 import cz.opendatalab.captcha.verification.entities.Task
 import java.time.Instant
 

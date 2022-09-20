@@ -7,13 +7,9 @@ import cz.opendatalab.captcha.siteconfig.SiteConfig
 import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
 import cz.opendatalab.captcha.siteconfig.TaskConfig
 import cz.opendatalab.captcha.task.templates.EmptyGenerationConfig
-import cz.opendatalab.captcha.task.templates.TaskTemplateRouter
 import cz.opendatalab.captcha.user.UserRepository
 import cz.opendatalab.captcha.verification.dto.VerificationDTO
-import cz.opendatalab.captcha.verification.entities.Description
-import cz.opendatalab.captcha.verification.entities.Task
-import cz.opendatalab.captcha.verification.entities.TextData
-import cz.opendatalab.captcha.verification.entities.Token
+import cz.opendatalab.captcha.verification.entities.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

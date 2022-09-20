@@ -14,7 +14,7 @@ internal class ObjectDetectorKotlinDLTest {
 
     @Test
     fun `detect person detected`() {
-        Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE).use {
+        Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE_1).use {
             val image = ImageIO.read(it)
             val detected = objectDetector.detect(image)
             assertTrue(detected.isNotEmpty())

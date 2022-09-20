@@ -4,8 +4,11 @@ import cz.opendatalab.captcha.TestConfiguration
 import cz.opendatalab.captcha.Utils
 import cz.opendatalab.captcha.datamanagement.objectmetadata.TextObjectType
 import io.mockk.*
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
@@ -97,7 +100,7 @@ internal class ObjectServiceTest {
     @Test
     fun saveImageFile() {
         val image = Thread.currentThread().contextClassLoader
-            .getResourceAsStream(TestConfiguration.TEST_IMAGE).use {
+            .getResourceAsStream(TestConfiguration.TEST_IMAGE_1).use {
             ImageIO.read(it)
         }
         val imageFormat = "jpg"

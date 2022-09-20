@@ -1,7 +1,8 @@
-package cz.opendatalab.captcha.verification
+package cz.opendatalab.captcha.verification.entities
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
+import cz.opendatalab.captcha.objectdetection.RelativeBoundingBox
 import kotlin.reflect.KClass
 
 data class AnswerSheet(val displayData: DisplayData, val answerType: AnswerType)
@@ -17,7 +18,9 @@ data class ImageDisplayData(val base64ImageString: String): DisplayData()
 data class ListDisplayData(val listData: List<DisplayData>): DisplayData()
 
 enum class AnswerType(@JsonValue val type: String) {
-    Text(className(TextAnswer::class)), MultipleText(className(TextListAnswer::class))
+    Text(className(TextAnswer::class)),
+    MultipleText(className(TextListAnswer::class)),
+    MultipleBoundingBox(className(BoundingBoxesAnswer::class))
 }
 
 // Needed for abstract type deserialization
@@ -29,6 +32,8 @@ sealed class Answer {
 data class TextAnswer(val text: String): Answer()
 
 data class TextListAnswer(val texts: List<String>): Answer()
+
+data class BoundingBoxesAnswer(val known: List<RelativeBoundingBox>, val unknown: List<RelativeBoundingBox>): Answer()
 
 fun <T : Any>className(clazz: KClass<T>): String {
     return clazz.java.simpleName

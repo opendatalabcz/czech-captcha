@@ -3,12 +3,13 @@ package cz.opendatalab.captcha.verification
 import cz.opendatalab.captcha.Utils.generateUniqueId
 import cz.opendatalab.captcha.siteconfig.SiteConfigService
 import cz.opendatalab.captcha.siteconfig.TaskConfig
+import cz.opendatalab.captcha.task.templates.TaskTemplateRouter
 import cz.opendatalab.captcha.verification.dto.TaskDTO
 import cz.opendatalab.captcha.verification.dto.TokenDTO
 import cz.opendatalab.captcha.verification.dto.VerificationDTO
+import cz.opendatalab.captcha.verification.entities.Answer
 import cz.opendatalab.captcha.verification.entities.Task
 import cz.opendatalab.captcha.verification.entities.Token
-import cz.opendatalab.captcha.task.templates.TaskTemplateRouter
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException

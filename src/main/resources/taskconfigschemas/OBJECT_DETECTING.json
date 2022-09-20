@@ -1,0 +1,32 @@
+{
+  "title": "Object Detecting Generation configuration",
+  "type": "object",
+  "required": [
+    "tags",
+    "owners"
+  ],
+  "properties": {
+    "tags": {
+      "type": "array",
+      "format": "table",
+      "title": "Image tags",
+      "items": {
+        "title": "Tag",
+        "minLength": 1,
+        "type": "string"
+      },
+      "description": "Only images that contain all the specified tags will be used (logical AND)"
+    },
+    "owners": {
+      "type": "array",
+      "format": "table",
+      "title": "Image owners",
+      "items": {
+        "title": "Owner",
+        "minLength": 1,
+        "type": "string"
+      },
+      "description": "Only images from the specified list of owners will be used. If no owner is selected, than no restriction is applied"
+    }
+  }
+}

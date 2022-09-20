@@ -1,16 +1,12 @@
 package cz.opendatalab.captcha.task.templates
 
-import cz.opendatalab.captcha.verification.Answer
-import cz.opendatalab.captcha.verification.AnswerSheet
 import cz.opendatalab.captcha.verification.entities.*
-import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationContext
 import org.springframework.context.event.EventListener
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import kotlin.streams.toList
 
 
 interface TaskTemplate {

@@ -1,6 +1,5 @@
 package cz.opendatalab.captcha.task.templates.imagelabelingtemplate
 
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ImageObjectType
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectTypeEnum
@@ -8,9 +7,7 @@ import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.task.templates.GenerationConfig
 import cz.opendatalab.captcha.task.templates.ImageLabelingGenerationConfig
 import cz.opendatalab.captcha.task.templates.TaskTemplate
-import cz.opendatalab.captcha.task.templates.TemplateUtils.toBase64Image
-import cz.opendatalab.captcha.task.templates.TemplateUtils.toBase64String
-import cz.opendatalab.captcha.verification.*
+import cz.opendatalab.captcha.task.templates.TemplateUtils.toDisplayImage
 import cz.opendatalab.captcha.verification.entities.*
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -76,13 +73,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
 
     fun toDisplayImages(images: List<Pair<ObjectMetadata, ExpectedResult>>): List<ImageDisplayData> {
         return images.map { (metadata, _) ->
-            val objectId = metadata.objectId
-            val format = (metadata.objectType as ImageObjectType).format
-
-            val bytes = objectService.getById(objectId)?.readAllBytes()
-            val base64ImageString =  bytes?.let { toBase64Image(toBase64String(it), format)}!! // todo handle possible error
-
-            ImageDisplayData(base64ImageString)
+            toDisplayImage(objectService, metadata)
         }
     }
 

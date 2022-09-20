@@ -42,7 +42,7 @@ class ObjectDetectorKotlinDL(
             DetectedObject(
                 obj.classLabel,
                 obj.probability.toDouble(),
-                BoundingBox(
+                AbsoluteBoundingBox(
                     (obj.xMin * biggerSide).toInt(),
                     (obj.yMin * biggerSide).toInt(),
                     ((obj.xMax - obj.xMin) * biggerSide).toInt(),

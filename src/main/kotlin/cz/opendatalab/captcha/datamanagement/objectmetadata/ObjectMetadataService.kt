@@ -7,7 +7,7 @@ import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
 import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectLocalizationData
+import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectsDetectingData
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -130,6 +130,10 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         objectMetadataRepo.insert(metadata)
 
         return fileId
+    }
+
+    fun updateMetadata(metadata: ObjectMetadata): ObjectMetadata {
+        return objectMetadataRepo.save(metadata)
     }
 
     fun addUrlImage(urlImageCreateDTO: UrlImageCreateDTO, user: String): List<String> {
@@ -256,12 +260,12 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     ) {
         parentMetadata.templateData.putIfAbsent(
             ObjectDetectingConstants.TEMPLATE_DATA_NAME,
-            ObjectDetectingData(mutableMapOf())
+            ObjectsDetectingData(mutableMapOf())
         )
-        val objectDetectingData =
-            parentMetadata.templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME]!! as ObjectDetectingData
-        objectDetectingData.objects[labelGroupName] =
-            mutableMapOf(*labelList.map { it to ObjectLocalizationData(false, emptyList(), mutableListOf()) }
+        val objectsDetectingData =
+            parentMetadata.templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME]!! as ObjectsDetectingData
+        objectsDetectingData.objects[labelGroupName] =
+            mutableMapOf(*labelList.map { it to ObjectDetectingData(false, mutableListOf(), mutableListOf()) }
                 .toTypedArray())
     }
 

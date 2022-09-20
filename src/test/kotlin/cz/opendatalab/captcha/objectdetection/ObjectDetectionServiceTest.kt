@@ -5,9 +5,9 @@ import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import java.io.ByteArrayInputStream
 
 internal class ObjectDetectionServiceTest {
@@ -25,8 +25,8 @@ internal class ObjectDetectionServiceTest {
     private val probability1 = 0.9
     private val probability2 = 0.7
     private val detectedObjects = listOf(
-        DetectedObject(person, probability1, BoundingBox(10, 10, 10, 10)),
-        DetectedObject(car, probability2, BoundingBox(20, 20, 20, 20))
+        DetectedObject(person, probability1, AbsoluteBoundingBox(10, 10, 10, 10)),
+        DetectedObject(car, probability2, AbsoluteBoundingBox(20, 20, 20, 20))
     )
 
     @Test
@@ -67,7 +67,7 @@ internal class ObjectDetectionServiceTest {
         val id2 = "id2"
 
         every { objectService.getById(fileId) } returns
-                Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE)
+                Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE_1)
         every { objectDetector.detect(any()) } returns detectedObjects
         every { objectService.saveImageFile(any(), jpg, user) } returns id1 andThen id2
 
@@ -88,7 +88,7 @@ internal class ObjectDetectionServiceTest {
         val id = "id"
 
         every { objectService.getById(fileId) } returns
-                Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE)
+                Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE_1)
         every { objectDetector.detect(any()) } returns detectedObjects
         every { objectService.saveImageFile(any(), jpg, user) } returns id
 
