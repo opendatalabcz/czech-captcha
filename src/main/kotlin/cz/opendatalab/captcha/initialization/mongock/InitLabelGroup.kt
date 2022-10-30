@@ -20,6 +20,6 @@ class InitLabelGroup(val labelGroupRepository: LabelGroupRepository, val objectD
     @RollbackExecution
     fun rollback() {
         labelGroupRepository.deleteByName("animals")
-        labelGroupRepository.deleteByName("object-detection")
+        labelGroupRepository.deleteByName(ObjectDetectionConstants.LABEL_GROUP)
     }
 }

@@ -8,5 +8,5 @@ interface ObjectDetector {
 }
 
 object ObjectDetectionConstants {
-    const val LABEL_GROUP = "object-detection"
+    const val LABEL_GROUP = "object_detection"
 }
