@@ -23,7 +23,7 @@ internal class ObjectServiceTest {
 
     private val user = "user"
     private val url = "url"
-    private val objectStorageInfo = ObjectStorageInfo(uuid, user, url, ObjectRepositoryType.URL)
+    private val objectStorageInfo = ObjectStorageInfo(uuid, url, user, url, ObjectRepositoryType.URL)
 
     @Test
     fun deleteFile() {
@@ -87,7 +87,7 @@ internal class ObjectServiceTest {
         val filename = "file.txt"
         val file = MockMultipartFile(filename, filename, MediaType.TEXT_PLAIN_VALUE, "test_text".toByteArray())
         val newFilename = "$uuid.txt"
-        val info = ObjectStorageInfo(uuid, user, newFilename, ObjectRepositoryType.FILESYSTEM)
+        val info = ObjectStorageInfo(uuid, filename, user, newFilename, ObjectRepositoryType.FILESYSTEM)
 
         every { objectCatalogue.insert(info) } returns info
 
@@ -105,11 +105,11 @@ internal class ObjectServiceTest {
         }
         val imageFormat = "jpg"
         val newFilename = "$uuid.$imageFormat"
-        val info = ObjectStorageInfo(uuid, user, newFilename, ObjectRepositoryType.FILESYSTEM)
+        val info = ObjectStorageInfo(uuid, TestConfiguration.TEST_IMAGE_1, user, newFilename, ObjectRepositoryType.FILESYSTEM)
 
         every { objectCatalogue.insert(info) } returns info
 
-        assertEquals(uuid, objectService.saveImageFile(image, imageFormat, user))
+        assertEquals(uuid, objectService.saveImageFile(image, imageFormat, TestConfiguration.TEST_IMAGE_1, user))
 
         verify { FileRepository.saveFile(any(), newFilename, ObjectRepositoryType.FILESYSTEM)}
         verify { objectCatalogue.insert(info) }
