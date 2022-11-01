@@ -7,16 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import java.lang.Exception
-import org.springframework.security.provisioning.InMemoryUserDetailsManager
-
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
-import org.springframework.security.core.userdetails.User
-import java.util.*
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.util.ArrayList
-
-import org.springframework.security.core.userdetails.UserDetails
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +15,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     override fun configure(http: HttpSecurity) {
         http
             .authorizeRequests()
-            .antMatchers("/api/verification/**", "/swagger-ui/*", "/v3/api-docs", "/v3/api-docs/*").permitAll()
+            .antMatchers("/api/verification/**", "/swagger-ui/*", "/v3/api-docs", "/v3/api-docs/*", "/index.html", "/", "/css/*").permitAll()
             .antMatchers("/api/admin/**/*").hasAuthority("ROLE_ADMIN")
             .anyRequest().authenticated()
             .and()
