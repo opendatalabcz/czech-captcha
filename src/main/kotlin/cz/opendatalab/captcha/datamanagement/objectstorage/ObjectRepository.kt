@@ -126,8 +126,11 @@ object FilesystemFileRepository : FileRepository {
         saveFileToDir(content, subDir, subFilename)
         Files.newDirectoryStream(dir).use {
             for (source in it) {
-                if (Files.isRegularFile(source) && source.fileName.toString().startsWith(subDirName)) {
-                    val destination = subDir.resolve(source.fileName.toString().substring(1))
+                val filenameToMove = source.fileName.toString()
+                if (Files.isRegularFile(source) &&
+                    filenameToMove.startsWith(subDirName) &&
+                    !filenameToMove.substring(1).startsWith('.')) {
+                    val destination = subDir.resolve(filenameToMove.substring(1))
                     Files.move(source, destination, StandardCopyOption.REPLACE_EXISTING)
                 }
             }
@@ -144,7 +147,7 @@ object FilesystemFileRepository : FileRepository {
         val subDirName = filename[0].toString()
         val subFilename = filename.substring(1)
         val subDir = dir.resolve(subDirName)
-        if ( Files.isDirectory(subDir) ) {
+        if ( Files.isDirectory(subDir) && !subFilename.startsWith('.')) {
             return findFile(subDir, subFilename)
         }
         val filePath = dir.resolve(filename)
