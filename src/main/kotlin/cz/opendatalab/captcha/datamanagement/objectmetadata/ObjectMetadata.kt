@@ -66,4 +66,4 @@ interface OtherMetadataType
 
 data class ParentFile(val id: String): OtherMetadataType
 
-data class ChildrenFiles(val ids: MutableList<String>): OtherMetadataType
+data class ChildrenFiles(val ids: MutableList<String>): OtherMetadataType // todo add bounding boxes

@@ -1,7 +1,7 @@
 package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
 
 import cz.opendatalab.captcha.datamanagement.objectmetadata.OtherMetadataType
-import cz.opendatalab.captcha.objectdetection.RelativeBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 
 // label group -> label -> ObjectLocalizationData
 data class ObjectsDetectingData(val objects: MutableMap<String, MutableMap<String, ObjectDetectingData>>): OtherMetadataType

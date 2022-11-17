@@ -3,8 +3,8 @@ package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
 import cz.opendatalab.captcha.TestConfiguration
 import cz.opendatalab.captcha.datamanagement.objectmetadata.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
-import cz.opendatalab.captcha.objectdetection.AbsoluteBoundingBox
-import cz.opendatalab.captcha.objectdetection.RelativeBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import cz.opendatalab.captcha.task.templates.ObjectDetectingGenerationConfig
 import cz.opendatalab.captcha.task.templates.TemplateUtils
 import cz.opendatalab.captcha.verification.entities.*

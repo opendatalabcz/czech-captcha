@@ -5,8 +5,8 @@ import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectTypeEnum
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
-import cz.opendatalab.captcha.objectdetection.AbsoluteBoundingBox
-import cz.opendatalab.captcha.objectdetection.RelativeBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import cz.opendatalab.captcha.task.templates.GenerationConfig
 import cz.opendatalab.captcha.task.templates.ObjectDetectingGenerationConfig
 import cz.opendatalab.captcha.task.templates.TaskTemplate

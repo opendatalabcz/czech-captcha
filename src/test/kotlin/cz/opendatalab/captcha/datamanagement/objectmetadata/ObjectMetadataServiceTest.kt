@@ -2,9 +2,9 @@ package cz.opendatalab.captcha.datamanagement.objectmetadata
 
 import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
-import cz.opendatalab.captcha.objectdetection.DetectedImage
-import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
-import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
+import cz.opendatalab.captcha.datamanagement.objectdetection.DetectedImage
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionConstants
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionService
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectsDetectingData
@@ -187,7 +187,8 @@ internal class ObjectMetadataServiceTest {
         val result = if (urlImage) {
             objectMetadataService.addUrlImage(UrlImageCreateDTO(url, ImageFileTypeDTO(jpg),
                 ObjectMetadataCreateDTO(mapOf(knownLabelGroup to knownLabels), tags),
-                ObjectDetectionParametersDTO(mapOf(ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
+                ObjectDetectionParametersDTO(mapOf(
+                    ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
                     nonOdLabelGroup to nonOdWantedLabels), 0.8, 0.9)
             ), user)
         } else {
@@ -195,7 +196,8 @@ internal class ObjectMetadataServiceTest {
                 file, FileImageCreateDTO(
                     ImageFileTypeDTO(jpg),
                     ObjectMetadataCreateDTO(mapOf(knownLabelGroup to knownLabels), tags),
-                    ObjectDetectionParametersDTO(mapOf(ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
+                    ObjectDetectionParametersDTO(mapOf(
+                        ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
                         nonOdLabelGroup to nonOdWantedLabels), 0.8, 0.9)
                 ), user)
         }

@@ -2,8 +2,8 @@ package cz.opendatalab.captcha.initialization.mongock
 
 import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupLimited
 import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupRepository
-import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
-import cz.opendatalab.captcha.objectdetection.ObjectDetector
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionConstants
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetector
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution

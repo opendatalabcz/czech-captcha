@@ -1,4 +1,4 @@
-package cz.opendatalab.captcha.objectdetection
+package cz.opendatalab.captcha.datamanagement.objectdetection
 
 import org.imgscalr.Scalr
 import org.jetbrains.kotlinx.dl.api.inference.loaders.ONNXModelHub

@@ -2,7 +2,7 @@ package cz.opendatalab.captcha.verification.entities
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonValue
-import cz.opendatalab.captcha.objectdetection.RelativeBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import kotlin.reflect.KClass
 
 data class AnswerSheet(val displayData: DisplayData, val answerType: AnswerType)

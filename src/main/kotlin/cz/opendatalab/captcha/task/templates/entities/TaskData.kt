@@ -1,6 +1,6 @@
 package cz.opendatalab.captcha.verification.entities
 
-import cz.opendatalab.captcha.objectdetection.RelativeBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 
 interface TaskData {
 }

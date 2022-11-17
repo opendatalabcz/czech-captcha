@@ -1,4 +1,4 @@
-package cz.opendatalab.captcha.objectdetection
+package cz.opendatalab.captcha.datamanagement.objectdetection
 
 import cz.opendatalab.captcha.TestConfiguration
 import org.junit.jupiter.api.AfterAll

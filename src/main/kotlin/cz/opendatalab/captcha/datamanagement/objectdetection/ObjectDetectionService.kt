@@ -1,4 +1,4 @@
-package cz.opendatalab.captcha.objectdetection
+package cz.opendatalab.captcha.datamanagement.objectdetection
 
 import cz.opendatalab.captcha.Utils
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
@@ -9,7 +9,8 @@ import javax.imageio.ImageIO
 
 @Service
 class ObjectDetectionService(private val objectService: ObjectService,
-                             private val objectDetector: ObjectDetector) {
+                             private val objectDetector: ObjectDetector
+) {
 
     fun getSupportedLabels(): Set<String> {
         return objectDetector.getSupportedLabels()

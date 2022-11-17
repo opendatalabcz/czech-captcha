@@ -3,8 +3,8 @@ package cz.opendatalab.captcha.datamanagement.objectmetadata
 import cz.opendatalab.captcha.Utils.selectRandom
 import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
-import cz.opendatalab.captcha.objectdetection.ObjectDetectionConstants
-import cz.opendatalab.captcha.objectdetection.ObjectDetectionService
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionConstants
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionService
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
 import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectsDetectingData
