@@ -275,8 +275,8 @@ class ObjectDetectingTemplate(
             objectDetectingData.answers.map { answer -> answer.map { box -> box.toAbsoluteBoundingBox(imageSize) } }
         val clusters = createClusters(absoluteAnswers)
         for (cluster in clusters) {
-            // if cluster has more than ANSWERS_NEEDED_FOR_EVALUATION/2 bounding boxes, make average of them and record it as a result
-            if (cluster.size > ANSWERS_NEEDED_FOR_EVALUATION / 2) {
+            // if cluster has more than (ANSWERS_NEEDED_FOR_EVALUATION+1)/2 bounding boxes, make average of them and record it as a result
+            if (cluster.size > (ANSWERS_NEEDED_FOR_EVALUATION + 1) / 2) {
                 objectDetectingData.result.add(getAverageBoundingBox(cluster).toRelativeBoundingBox(imageSize))
             }
         }
