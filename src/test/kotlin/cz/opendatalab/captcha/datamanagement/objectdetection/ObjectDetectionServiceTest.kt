@@ -1,119 +1,144 @@
 package cz.opendatalab.captcha.datamanagement.objectdetection
 
-import cz.opendatalab.captcha.TestConfiguration
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectRepositoryType
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import cz.opendatalab.captcha.TestImages
+import cz.opendatalab.captcha.datamanagement.ImageUtils
+import io.mockk.*
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 
 internal class ObjectDetectionServiceTest {
 
     private val objectDetector: ObjectDetector = mockk()
-    private val objectService: ObjectService = mockk()
 
-    private val objectDetectionService = ObjectDetectionService(objectService, objectDetector)
+    private val objectDetectionService = ObjectDetectionService(objectDetector)
 
-    private val fileId = "id"
-    private val user = "user"
-    private val jpg = "jpg"
+    private val image = TestImages.IMAGE_1
     private val person = "person"
     private val car = "car"
+    private val labels = setOf(person, car)
     private val probability1 = 0.9
-    private val probability2 = 0.7
-    private val detectedObjects = listOf(
-        DetectedObject(person, probability1, AbsoluteBoundingBox(10, 10, 10, 10)),
-        DetectedObject(car, probability2, AbsoluteBoundingBox(20, 20, 20, 20))
+    private val probability2 = 0.1
+    private val box1 = RelativeBoundingBox(0.1, 0.1, 0.1, 0.1)
+    private val box2 = RelativeBoundingBox(0.2, 0.2, 0.2, 0.2)
+    private val box3 = RelativeBoundingBox(0.2, 0.2, 0.4, 0.4)
+    private val detectedObjectsWithNoOverlaps = listOf(
+        DetectedObject(person, probability1, box1),
+        DetectedObject(car, probability2, box2)
     )
-    private val originalName = "file.jpg"
-    private val objectStorageInfo = ObjectStorageInfo(fileId, originalName, user, "path/to/$originalName", ObjectRepositoryType.FILESYSTEM)
+    private val detectedObjectsWithOverlapDifferentLabel = listOf(
+        DetectedObject(person, probability1, box2),
+        DetectedObject(car, probability2, box3)
+    )
+    private val detectedObjectsWithOverlapSameLabel = listOf(
+        DetectedObject(car, probability1, box2),
+        DetectedObject(car, probability2, box3)
+    )
+
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun mockImageUtils() {
+            mockkObject(ImageUtils)
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun unmockImageUtils() {
+            unmockkObject(ImageUtils)
+        }
+    }
 
     @Test
     fun getSupportedLabels() {
-        val labels = setOf("person", "car")
         every { objectDetector.getSupportedLabels() } returns labels
-
-        assertEquals(objectDetectionService.getSupportedLabels(), labels)
-
+        assertEquals(labels, objectDetectionService.getSupportedLabels())
         verify { objectDetector.getSupportedLabels() }
     }
 
     @Test
-    fun `detectObjects cannot get file`() {
-        every { objectService.getById(fileId) } returns null
+    fun detectObjects_withImage_successful() {
+        every { objectDetector.detect(image) } returns detectedObjectsWithNoOverlaps
 
-        assertThrows(IllegalArgumentException::class.java) {
-            objectDetectionService.detectObjects(fileId, jpg, user, emptyList())
-        }
+        val result = objectDetectionService.detectObjects(image, setOf(car))
+        assertEquals(1, result.size)
+        assertEquals(detectedObjectsWithNoOverlaps[1], result[0])
 
-        verify { objectService.getById(fileId) }
+        verify { objectDetector.detect(image) }
     }
 
     @Test
-    fun `detectObjects invalid image`() {
-        every { objectService.getById(fileId) } returns ByteArrayInputStream("invalid_image".toByteArray())
-        every { objectService.getInfoById(fileId) } returns objectStorageInfo
+    fun detectObjects_withInputStream_successful() {
+        every { objectDetector.detect(image) } returns detectedObjectsWithNoOverlaps
+        every { ImageUtils.getImageFromInputStream(any()) } returns image
 
-        assertThrows(IllegalStateException::class.java) {
-            objectDetectionService.detectObjects(fileId, jpg, user, emptyList())
-        }
+        val result = objectDetectionService.detectObjects(ByteArrayInputStream(ByteArray(1)), setOf(car))
+        assertEquals(1, result.size)
+        assertEquals(detectedObjectsWithNoOverlaps[1], result[0])
 
-        verify { objectService.getById(fileId) }
-        verify { objectService.getInfoById(fileId) }
+        verify { ImageUtils.getImageFromInputStream(any()) }
+        verify { objectDetector.detect(image) }
     }
 
     @Test
-    fun `detectObjects without filter`() {
-        val id1 = "id1"
-        val id2 = "id2"
-        val capturedOriginalNames = mutableListOf<String>()
+    fun detectObjectsWithOverlaps_noOverlaps_shouldHaveOnlyOriginalLabel() {
+        every { objectDetector.detect(image) } returns detectedObjectsWithNoOverlaps
 
-        every { objectService.getById(fileId) } returns
-                Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE_1)
-        every { objectService.getInfoById(fileId) } returns objectStorageInfo
-        every { objectDetector.detect(any()) } returns detectedObjects
-        every { objectService.saveImageFile(any(), jpg, capture(capturedOriginalNames), user) } returns id1 andThen id2
+        val result = objectDetectionService.detectObjectsWithOverlaps(image, labels)
+        assertEquals(2, result.size)
+        assertEquals(DetectedObjectWithOverlappingLabels(mapOf(person to probability1), box1), result[0])
+        assertEquals(DetectedObjectWithOverlappingLabels(mapOf(car to probability2), box2), result[1])
 
-        val expected = listOf(
-            DetectedImage(id1, mapOf(person to probability1)),
-            DetectedImage(id2, mapOf(car to probability2))
-        )
-
-        assertEquals(expected, objectDetectionService.detectObjects(fileId, jpg, user, listOf(person, car)))
-        assertEquals(2, capturedOriginalNames.size)
-        assertEquals("$originalName-detected0.$jpg", capturedOriginalNames[0])
-        assertEquals("$originalName-detected1.$jpg", capturedOriginalNames[1])
-
-        verify { objectService.getById(fileId) }
-        verify { objectService.getInfoById(fileId) }
-        verify { objectDetector.detect(any()) }
-        verify(exactly = 2) { objectService.saveImageFile(any(), jpg, any(), user) }
+        verify { objectDetector.detect(image) }
     }
 
     @Test
-    fun `detectObjects with filter`() {
-        val id = "id"
+    fun detectObjectsWithOverlaps_withOverlapsDifferentLabel_shouldHaveBothLabels() {
+        every { objectDetector.detect(image) } returns detectedObjectsWithOverlapDifferentLabel
 
-        every { objectService.getById(fileId) } returns
-                Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE_1)
-        every { objectService.getInfoById(fileId) } returns objectStorageInfo
-        every { objectDetector.detect(any()) } returns detectedObjects
-        every { objectService.saveImageFile(any(), jpg, "$originalName-detected0.$jpg", user) } returns id
+        val result = objectDetectionService.detectObjectsWithOverlaps(image, labels)
+        assertEquals(2, result.size)
+        assertEquals(box2, result[0].relativeBoundingBox)
+        assertEquals(box3, result[1].relativeBoundingBox)
+        assertEquals(2, result[0].labelsWithProbability.size)
+        assertEquals(2, result[1].labelsWithProbability.size)
+        assertEquals(probability1, result[0].labelsWithProbability[person])
+        assertEquals(probability2, result[0].labelsWithProbability[car])
+        assertEquals(probability2, result[1].labelsWithProbability[car])
+        assertEquals(probability1 * 0.25, result[1].labelsWithProbability[person])
 
-        val expected = listOf(
-            DetectedImage(id, mapOf(car to probability2))
-        )
+        verify { objectDetector.detect(image) }
+    }
 
-        assertEquals(expected, objectDetectionService.detectObjects(fileId, jpg, user, listOf(car)))
+    @Test
+    fun detectObjectsWithOverlaps_withOverlapsSameLabel_shouldHaveOneLabel() {
+        every { objectDetector.detect(image) } returns detectedObjectsWithOverlapSameLabel
 
-        verify { objectService.getById(fileId) }
-        verify { objectService.getInfoById(fileId) }
-        verify { objectDetector.detect(any()) }
-        verify(exactly = 1) { objectService.saveImageFile(any(), jpg, "$originalName-detected0.$jpg", user) }
+        val result = objectDetectionService.detectObjectsWithOverlaps(image, labels)
+        assertEquals(2, result.size)
+        assertEquals(box2, result[0].relativeBoundingBox)
+        assertEquals(box3, result[1].relativeBoundingBox)
+        assertEquals(1, result[0].labelsWithProbability.size)
+        assertEquals(1, result[1].labelsWithProbability.size)
+        assertEquals(probability1, result[0].labelsWithProbability[car])
+        assertEquals(probability1 * 0.25, result[1].labelsWithProbability[car])
+
+        verify { objectDetector.detect(image) }
+    }
+
+    @Test
+    fun detectObjectsWithOverlaps_withInputStreamAndNoOverlaps_shouldHaveOnlyOriginalLabel() {
+        every { objectDetector.detect(image) } returns detectedObjectsWithNoOverlaps
+        every { ImageUtils.getImageFromInputStream(any()) } returns image
+
+        val result = objectDetectionService.detectObjectsWithOverlaps(ByteArrayInputStream(ByteArray(1)), labels)
+        assertEquals(2, result.size)
+        assertEquals(DetectedObjectWithOverlappingLabels(mapOf(person to probability1), box1), result[0])
+        assertEquals(DetectedObjectWithOverlappingLabels(mapOf(car to probability2), box2), result[1])
+
+        verify { ImageUtils.getImageFromInputStream(any()) }
+        verify { objectDetector.detect(image) }
     }
 }

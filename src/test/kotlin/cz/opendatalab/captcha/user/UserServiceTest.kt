@@ -55,7 +55,7 @@ internal class UserServiceTest(@Autowired val userService: UserService,
     @Test
     fun loadUserByUsername() {
         val username = "username"
-        val user = UserData(username, "password", emptyList())
+        val user = UserData(username, "password", emptySet())
 
         Mockito.`when`(userRepository.findByUsername(username)).thenReturn(user)
 
@@ -67,7 +67,7 @@ internal class UserServiceTest(@Autowired val userService: UserService,
         val username = "username"
         val newPassword = "password"
 
-        val user = UserData(username, "hashedOldPassword", emptyList())
+        val user = UserData(username, "hashedOldPassword", emptySet())
         Mockito.`when`(userRepository.findByUsername(username)).thenReturn(user)
 
         userService.changePassword(newPassword, username)

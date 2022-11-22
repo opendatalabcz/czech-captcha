@@ -1,47 +1,79 @@
 package cz.opendatalab.captcha.datamanagement.objectdetection
 
-import cz.opendatalab.captcha.Utils
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
-import org.imgscalr.Scalr
+import cz.opendatalab.captcha.datamanagement.ImageUtils
 import org.springframework.stereotype.Service
 import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
+import java.io.InputStream
+import java.util.*
 
 @Service
-class ObjectDetectionService(private val objectService: ObjectService,
-                             private val objectDetector: ObjectDetector
-) {
-
+class ObjectDetectionService(private val objectDetector: ObjectDetector) {
     fun getSupportedLabels(): Set<String> {
         return objectDetector.getSupportedLabels()
     }
 
-    fun detectObjects(fileId: String, imageFormat: String, user: String, wantedLabels: List<String>): List<DetectedImage> {
-        val inputStream = objectService.getById(fileId) ?: throw IllegalArgumentException("File with id $fileId cannot be accessed.")
-        val originalName = objectService.getInfoById(fileId)?.originalName ?: (fileId + imageFormat)
-        val image = ImageIO.read(inputStream) ?: throw IllegalStateException("Cannot read image with id $fileId")
-        inputStream.close()
-
-        val detectedObjects = objectDetector.detect(image).filter { obj -> wantedLabels.contains(obj.label) }
-        return saveDetectedObjects(image, imageFormat, detectedObjects, originalName, user)
+    fun detectObjects(image: BufferedImage, wantedLabels: Set<String>): List<DetectedObject> {
+        return objectDetector.detect(image).filter { obj -> wantedLabels.contains(obj.label) }
     }
 
-    private fun saveDetectedObjects(
-        image: BufferedImage,
-        imageFormat: String,
-        detectedObjects: List<DetectedObject>,
-        parentOriginalName: String,
-        user: String
-    ): List<DetectedImage> {
-        val result = mutableListOf<DetectedImage>()
-        for ((i, obj) in detectedObjects.withIndex()) {
-            val croppedImage = Scalr.crop(image, obj.absoluteBoundingBox.x, obj.absoluteBoundingBox.y, obj.absoluteBoundingBox.width, obj.absoluteBoundingBox.height)
-            val originalName = "${parentOriginalName}-detected$i.${Utils.getFileExtension(parentOriginalName)}"
-            val id = objectService.saveImageFile(croppedImage, imageFormat, originalName, user)
-            result.add(DetectedImage(id, mapOf(obj.label to obj.probability)))
+    fun detectObjects(imageStream: InputStream, wantedLabels: Set<String>): List<DetectedObject> {
+        val image = ImageUtils.getImageFromInputStream(imageStream)
+        return detectObjects(image, wantedLabels)
+    }
+
+    fun detectObjectsWithOverlaps(image: BufferedImage, wantedLabels: Set<String>): List<DetectedObjectWithOverlappingLabels> {
+        val detectedObjects = detectObjects(image, wantedLabels)
+        return addOverlappingLabels(detectedObjects)
+    }
+
+    fun detectObjectsWithOverlaps(imageStream: InputStream, wantedLabels: Set<String>): List<DetectedObjectWithOverlappingLabels> {
+        val detectedObjects = detectObjects(imageStream, wantedLabels)
+        return addOverlappingLabels(detectedObjects)
+    }
+
+    private fun addOverlappingLabels(objects: List<DetectedObject>): MutableList<DetectedObjectWithOverlappingLabels> {
+        val objectsWithOverlappingLabels = mutableListOf<DetectedObjectWithOverlappingLabels>()
+        val objectsLabels = List(objects.size) { mutableMapOf<String, Double>() }
+        for (i in objects.indices) {
+            for (j in i + 1 until objects.size) {
+                addTwoOverlappingLabels(objectsLabels, objects, i, j)
+            }
+            addOriginalLabel(objectsLabels[i], objects[i])
+            objectsWithOverlappingLabels.add(DetectedObjectWithOverlappingLabels(objectsLabels[i], objects[i].relativeBoundingBox))
         }
-        return result
+        return objectsWithOverlappingLabels
+    }
+
+    private fun addTwoOverlappingLabels(
+        objectsLabels: List<MutableMap<String, Double>>,
+        objects: List<DetectedObject>,
+        i1: Int,
+        i2: Int
+    ) {
+        val o1 = objects[i1]
+        val o2 = objects[i2]
+        val b1 = o1.relativeBoundingBox
+        val b2 = o2.relativeBoundingBox
+        val intersection = RelativeBoundingBox.calculateIntersection(b1, b2)
+        if (intersection <= 0.0) {
+            return
+        }
+        setNewProbabilityOrLeaveBigger(objectsLabels[i1], o2.label, calculateProbabilityForOverlappingLabels(intersection, b1.calculateArea(), o2.probability))
+        setNewProbabilityOrLeaveBigger(objectsLabels[i2], o1.label, calculateProbabilityForOverlappingLabels(intersection, b2.calculateArea(), o1.probability))
+    }
+
+    private fun addOriginalLabel(allLabels: MutableMap<String, Double>, originalObj: DetectedObject) {
+        setNewProbabilityOrLeaveBigger(allLabels, originalObj.label, originalObj.probability)
+    }
+
+    private fun setNewProbabilityOrLeaveBigger(allLabels: MutableMap<String, Double>, key: String, newProbability: Double) {
+        val originalProbability = allLabels[key] ?: 0.0
+        if (originalProbability < newProbability) {
+            allLabels[key] = newProbability
+        }
+    }
+
+    private fun calculateProbabilityForOverlappingLabels(intersection: Double, area: Double, originalProbability: Double): Double {
+        return intersection / area * originalProbability
     }
 }
-
-data class DetectedImage(val id: String, val labels: Map<String, Double>)

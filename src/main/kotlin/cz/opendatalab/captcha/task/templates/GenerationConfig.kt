@@ -3,10 +3,10 @@ package cz.opendatalab.captcha.task.templates
 sealed interface GenerationConfig
 
 @TaskType("IMAGE_LABELING")
-data class ImageLabelingGenerationConfig(val labelGroup: String, val tags: List<String>, val owners: List<String>): GenerationConfig
+data class ImageLabelingGenerationConfig(val labelGroup: String, val tags: Set<String>, val owners: Set<String>): GenerationConfig
 
 @TaskType("OBJECT_DETECTING")
-data class ObjectDetectingGenerationConfig(val tags: List<String>, val owners: List<String>): GenerationConfig
+data class ObjectDetectingGenerationConfig(val tags: Set<String>, val owners: Set<String>): GenerationConfig
 
 object EmptyGenerationConfig: GenerationConfig
 

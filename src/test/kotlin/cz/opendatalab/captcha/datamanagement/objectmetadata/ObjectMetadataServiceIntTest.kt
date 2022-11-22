@@ -1,17 +1,12 @@
 package cz.opendatalab.captcha.datamanagement.objectmetadata
 
 import cz.opendatalab.captcha.datamanagement.dto.LabelGroupCreateDTO
-import cz.opendatalab.captcha.datamanagement.dto.ObjectMetadataCreateDTO
-import cz.opendatalab.captcha.datamanagement.dto.TextFileTypeDTO
-import cz.opendatalab.captcha.datamanagement.dto.UrlObjectCreateDTO
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
 import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
 import cz.opendatalab.captcha.user.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,33 +23,31 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
                                             @Autowired @MockBean val userRepository: UserRepository,
                                             @Autowired @MockBean val siteConfigRepo: SiteConfigRepository,
                                          ) {
-    val user1 = "user1"
-    val user2 = "user2"
-    val user3 = "user3"
+    private final val user1 = "user1"
+    private final val user2 = "user2"
+    private final val user3 = "user3"
 
-    val label = "label"
-    val labelGroupName = "labelGroupName"
-    val labelingWithLabel = Labeling(listOf(label))
-    val labelingWithoutLabel = Labeling(emptyList())
+    private final val label = "label"
+    private final val labelGroupName = "labelGroupName"
+    private final val labelingWithLabel = Labeling(setOf(label))
+    private final val labelingWithoutLabel = Labeling(emptySet())
 
-    val labelGroupLabelingWithLabel = Pair(labelGroupName, labelingWithLabel)
-    val labelGroupLabelingWithoutLabel = Pair(labelGroupName, labelingWithoutLabel)
+    private val labelGroupLabelingWithLabel = Pair(labelGroupName, labelingWithLabel)
+    private val labelGroupLabelingWithoutLabel = Pair(labelGroupName, labelingWithoutLabel)
     // with 1, 3; without 6; not knowing 2,4,5
 
-    private val metadata1 = ObjectMetadata("1", user1, ImageObjectType("png"), labelGroupLabelingWithLabel)
-    private val metadata2 = ObjectMetadata("2", user1, ImageObjectType("png"), mutableMapOf(), listOf("animal", "winter"))
-    private val metadata3 = ObjectMetadata("3", user2, ImageObjectType("png"), labelGroupLabelingWithLabel)
-    private val metadata4 = ObjectMetadata("4", user2, ImageObjectType("png"), mutableMapOf(), listOf("private"))
-    private val metadata5 = ObjectMetadata("5", user2, TextObjectType)
-    private val metadata6 = ObjectMetadata("6", user3, ImageObjectType("png"), labelGroupLabelingWithoutLabel)
+    private val metadata1 = ObjectMetadata("1", user1, "png", labelGroupLabelingWithLabel)
+    private val metadata2 = ObjectMetadata("2", user1, "png", setOf("animal", "winter"))
+    private val metadata3 = ObjectMetadata("3", user2, "png", labelGroupLabelingWithLabel)
+    private val metadata4 = ObjectMetadata("4", user2, "png", setOf("private"))
+    private val metadata5 = ObjectMetadata("5", user2, "txt")
+    private val metadata6 = ObjectMetadata("6", user3, "png", labelGroupLabelingWithoutLabel)
 
-
-
-    val storedConfigs = listOf(metadata1, metadata2, metadata3, metadata4, metadata5, metadata6)
+    private val storedMetadata = listOf(metadata1, metadata2, metadata3, metadata4, metadata5, metadata6)
 
     @Test
     fun getAllAccessible() {
-        `when`(objectMetadataRepo.findAll()).thenReturn(storedConfigs)
+        `when`(objectMetadataRepo.findAll()).thenReturn(storedMetadata)
 
         val result = objectMetadataService.getAllAccessible(user1)
 
@@ -63,31 +56,20 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
 
     @Test
     fun `getFiltered full`() {
-        `when`(objectMetadataRepo.findAll()).thenReturn(storedConfigs)
+        `when`(objectMetadataRepo.findAll()).thenReturn(storedMetadata)
 
-        val result = objectMetadataService.getFiltered(user1, listOf(), listOf(user1, user2), ObjectTypeEnum.IMAGE)
+        val result = objectMetadataService.getFiltered(user1, setOf(), setOf(user1, user2), ObjectTypeEnum.IMAGE)
 
         assertThat(result).isEqualTo(listOf(metadata1, metadata2, metadata3))
     }
 
     @Test
     fun `getFiltered full animal tag`() {
-        `when`(objectMetadataRepo.findAll()).thenReturn(storedConfigs)
+        `when`(objectMetadataRepo.findAll()).thenReturn(storedMetadata)
 
-        val result = objectMetadataService.getFiltered(user1, listOf("animal", "winter"), listOf(user1, user2), ObjectTypeEnum.IMAGE)
+        val result = objectMetadataService.getFiltered(user1, setOf("animal", "winter"), setOf(user1, user2), ObjectTypeEnum.IMAGE)
 
         assertThat(result).isEqualTo(listOf(metadata2))
-    }
-
-    @Test
-    fun addUrlObject() {
-        val user = "user"
-        val objectDTO = UrlObjectCreateDTO("url", TextFileTypeDTO, ObjectMetadataCreateDTO(emptyMap(), emptyList()))
-
-        objectMetadataService.addUrlObject(objectDTO, user)
-
-        verify(objectCatalogue).insert(any(ObjectStorageInfo::class.java))
-        verify(objectMetadataRepo).insert(any(ObjectMetadata::class.java))
     }
 
     @Test
@@ -116,7 +98,7 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
 
         val expected = LabelGroup(labelGroupName, maxCardinality)
 
-        val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptyList(), maxCardinality)
+        val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptySet(), maxCardinality)
         `when`(labelRepo.existsByName(labelGroupName)).thenReturn(false)
 
 
@@ -130,7 +112,7 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
         val labelGroupName = "labelGroupName"
         val maxCardinality = 0
 
-        val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptyList(), maxCardinality)
+        val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptySet(), maxCardinality)
         `when`(labelRepo.existsByName(labelGroupName)).thenReturn(false)
 
         assertThrows<ResponseStatusException> {
@@ -143,7 +125,7 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
         val labelGroupName = "labelGroupName"
         val maxCardinality = 1
 
-        val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptyList(), maxCardinality)
+        val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptySet(), maxCardinality)
         `when`(labelRepo.existsByName(labelGroupName)).thenReturn(true)
 
         assertThrows<ResponseStatusException> {
@@ -152,30 +134,29 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
     }
     // with 1, 3; without 6; not knowing 2,4,5
     @Test
-    fun `getObjectsNotKnowingLabel`() {
+    fun getObjectsNotKnowingLabel() {
 
         val expected = listOf(metadata2, metadata4, metadata5)
 
-        val result = objectMetadataService.getObjectsNotKnowingLabel(storedConfigs, labelGroupName, label)
+        val result = objectMetadataService.getObjectsNotKnowingLabel(storedMetadata, labelGroupName, label)
 
         assertThat(result).isEqualTo(expected)
     }
 
     @Test
-    fun `getObjectsWithoutLabel`() {
+    fun getObjectsWithoutLabel() {
         val expected = listOf(metadata6)
 
-        val result = objectMetadataService.getObjectsWithoutLabel(storedConfigs, labelGroupName, label)
+        val result = objectMetadataService.getObjectsWithoutLabel(storedMetadata, labelGroupName, label)
 
         assertThat(result).isEqualTo(expected)
     }
 
     @Test
-    fun `getObjectsWithLabel`() {
-
+    fun getObjectsWithLabel() {
         val expected = listOf(metadata1, metadata3)
 
-        val result = objectMetadataService.getObjectsWithLabel(storedConfigs, labelGroupName, label)
+        val result = objectMetadataService.getObjectsWithLabel(storedMetadata, labelGroupName, label)
 
         assertThat(result).isEqualTo(expected)
     }

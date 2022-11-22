@@ -24,7 +24,7 @@ class InitSiteConfig(val siteConfigRepo: SiteConfigRepository) {
             SiteConfig("siteKey3", "secretKey3", "user", "site3 dog/cat",
                 TaskConfig(
                 "IMAGE_LABELING",
-                ImageLabelingGenerationConfig("animals", emptyList(), emptyList()),
+                ImageLabelingGenerationConfig("animals", emptySet(), emptySet()),
                 0.95
             )),
             SiteConfig("siteKey4", "secretKey4", "user", "site4 text",

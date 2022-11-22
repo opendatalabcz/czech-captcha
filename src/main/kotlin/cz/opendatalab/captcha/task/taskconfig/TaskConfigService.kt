@@ -14,7 +14,7 @@ class TaskConfigService(private val taskTemplateRouter: TaskTemplateRouter, priv
         return objectMapper.readTree(resource.readText())
     }
 
-    fun getTaskNames(): List<String> {
+    fun getTaskNames(): Set<String> {
         return taskTemplateRouter.getTaskTypes()
     }
 

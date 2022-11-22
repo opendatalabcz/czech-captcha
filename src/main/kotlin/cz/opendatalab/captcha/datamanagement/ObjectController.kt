@@ -24,7 +24,7 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
 
     @GetMapping
     fun getDataObjects(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<DataObjectDTO> {
-        val metadata = metadataService.getAllAccessible(user.username).associateBy { it.objectId }
+        val metadata = metadataService.getAllAccessible(user.username).associateBy { it.id }
         val ids = metadata.keys
         val storageInfos = objectService.getInfoByIdList(ids)
 
@@ -44,31 +44,33 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
 
     @PostMapping("url")
     fun addURLObject(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody urlObject: UrlObjectCreateDTO): ResponseEntity<Unit> {
-        val objectId = metadataService.addUrlObject(urlObject, user.username)
-        return ResponseEntity.created(URI.create("api/datamanagement/objects/$objectId")).build()
+        val metadata = metadataService.addUrlObject(urlObject, user.username)
+        return ResponseEntity.created(URI.create("api/datamanagement/objects/${metadata.id}")).build()
     }
 
     @PostMapping("file")
     fun addFileObject(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestPart("file") file: MultipartFile,
                       @RequestPart("fileObject") fileObject: FileObjectCreateDTO): ResponseEntity<Unit> {
-        val objectId = metadataService.addFileObject(file, fileObject, user.username)
-        return ResponseEntity.created(URI.create("api/datamanagement/objects/$objectId")).build()
+        val originalFilename = file.originalFilename ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Original filename of uploaded file cannot be null")
+        val metadata = metadataService.addFileObject(file.inputStream, originalFilename, fileObject, user.username)
+        return ResponseEntity.created(URI.create("api/datamanagement/objects/${metadata.id}")).build()
     }
 
     @PostMapping("image/url")
     fun addURLImage(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestBody urlImage: UrlImageCreateDTO): ResponseEntity<List<URI>> {
-        val objectIds = metadataService.addUrlImage(urlImage, user.username)
+        val objectsMetadata = metadataService.addUrlImageWithOD(urlImage, user.username)
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(objectIds.map{ id -> URI.create("api/datamanagement/objects/$id") })    }
+            .body(objectsMetadata.map{ objectMetadata -> URI.create("api/datamanagement/objects/${objectMetadata.id}") })    }
 
     @PostMapping("image/file")
     fun addFileImage(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails, @RequestPart("file") file: MultipartFile,
                       @RequestPart("fileImage") fileImage: FileImageCreateDTO): ResponseEntity<List<URI>> {
-        val objectIds = metadataService.addFileImage(file, fileImage, user.username)
+        val originalFilename = file.originalFilename ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Original filename of uploaded file cannot be null")
+        val objectsMetadata = metadataService.addFileImageWithOD(file.inputStream, originalFilename, fileImage, user.username)
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(objectIds.map{ id -> URI.create("api/datamanagement/objects/$id") })
+            .body(objectsMetadata.map{ objectMetadata -> URI.create("api/datamanagement/objects/${objectMetadata.id}") })
     }
 
     @GetMapping("labelgroups")

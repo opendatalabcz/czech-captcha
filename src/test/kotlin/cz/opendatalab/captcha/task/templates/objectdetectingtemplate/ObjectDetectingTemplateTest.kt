@@ -1,6 +1,6 @@
 package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
 
-import cz.opendatalab.captcha.TestConfiguration
+import cz.opendatalab.captcha.TestImages
 import cz.opendatalab.captcha.datamanagement.objectmetadata.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
@@ -14,7 +14,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.InputStream
 
 internal class ObjectDetectingTemplateTest {
     private val objectService: ObjectService = mockk()
@@ -104,24 +103,24 @@ internal class ObjectDetectingTemplateTest {
             )
         )
     )
-    private val config = ObjectDetectingGenerationConfig(emptyList(), emptyList())
+    private val config = ObjectDetectingGenerationConfig(emptySet(), emptySet())
     private val metadata = listOf(
-        ObjectMetadata(id1, user, ImageObjectType(jpg)),
+        ObjectMetadata(id1, user, jpg),
         ObjectMetadata(
             id2,
             user,
-            ImageObjectType(jpg),
+            jpg,
+            emptySet(),
             mutableMapOf(),
-            mutableMapOf(ObjectDetectingConstants.TEMPLATE_DATA_NAME to objectsDetectingDataFinished),
-            emptyList()
+            mutableMapOf(ObjectDetectingConstants.TEMPLATE_DATA_NAME to objectsDetectingDataFinished)
         ),
         ObjectMetadata(
             id3,
             user,
-            ImageObjectType(jpg),
+            jpg,
+            emptySet(),
             mutableMapOf(),
-            mutableMapOf(ObjectDetectingConstants.TEMPLATE_DATA_NAME to objectsDetectingDataNotFinished),
-            emptyList()
+            mutableMapOf(ObjectDetectingConstants.TEMPLATE_DATA_NAME to objectsDetectingDataNotFinished)
         )
     )
 
@@ -135,8 +134,8 @@ internal class ObjectDetectingTemplateTest {
                 ObjectTypeEnum.IMAGE
             )
         } returns metadata
-        every { objectService.getById(id2) } returns loadImage(TestConfiguration.TEST_IMAGE_1)
-        every { objectService.getById(id3) } answers { loadImage(TestConfiguration.TEST_IMAGE_2) }
+        every { objectService.getObjectById(id2) } returns TestImages.getInputStream1()
+        every { objectService.getObjectById(id3) } answers { TestImages.getInputStream2() }
     }
 
     @Test
@@ -162,18 +161,18 @@ internal class ObjectDetectingTemplateTest {
         assertEquals(2, displayData.listData.size)
         assertTrue(displayData.listData[0] is ImageDisplayData)
         assertTrue(displayData.listData[1] is ImageDisplayData)
-        val testImage1 = loadImage(TestConfiguration.TEST_IMAGE_1).use {
+        val testImage1 = TestImages.getInputStream1().use {
             TemplateUtils.toBase64Image(it.readAllBytes(), jpg)
         }
-        val testImage2 = loadImage(TestConfiguration.TEST_IMAGE_2).use {
+        val testImage2 = TestImages.getInputStream2().use {
             TemplateUtils.toBase64Image(it.readAllBytes(), jpg)
         }
         assertEquals(testImage1, (displayData.listData[0] as ImageDisplayData).base64ImageString)
         assertEquals(testImage2, (displayData.listData[1] as ImageDisplayData).base64ImageString)
 
         verify { objectMetadataService.getFiltered(user, config.tags, config.owners, ObjectTypeEnum.IMAGE) }
-        verify { objectService.getById(id2) }
-        verify { objectService.getById(id3) }
+        verify { objectService.getObjectById(id2) }
+        verify { objectService.getObjectById(id3) }
     }
 
     @Test
@@ -186,9 +185,9 @@ internal class ObjectDetectingTemplateTest {
                 ObjectTypeEnum.IMAGE
             )
         } returns listOf(
-            ObjectMetadata(id1, user, ImageObjectType(jpg)),
-            ObjectMetadata(id2, user, ImageObjectType(jpg)),
-            ObjectMetadata(id3, user, ImageObjectType(jpg))
+            ObjectMetadata(id1, user, jpg),
+            ObjectMetadata(id2, user, jpg),
+            ObjectMetadata(id3, user, jpg)
         )
 
         assertThrows(IllegalArgumentException::class.java) {
@@ -215,7 +214,7 @@ internal class ObjectDetectingTemplateTest {
         // remove answers from metadata
         val metadataCopy = metadata.toMutableList()
         val objectsDetectingData =
-            (metadataCopy[2].templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData).objects[labelgroup]?.get(
+            (metadataCopy[2].otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData).objects[labelgroup]?.get(
                 label
             )!!
         objectsDetectingData.answers.clear()
@@ -258,7 +257,7 @@ internal class ObjectDetectingTemplateTest {
         every { objectMetadataService.getById(id3) } returns metadata[2]
         every { objectMetadataService.updateMetadata(any()) } returns metadata[2]
         val objectsDetectingData =
-            (metadata[2].templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData).objects[labelgroup]?.get(
+            (metadata[2].otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData).objects[labelgroup]?.get(
                 label
             )!!
 
@@ -291,25 +290,5 @@ internal class ObjectDetectingTemplateTest {
 
         verify(exactly = 1) { objectMetadataService.getById(id3) }
         verify(exactly = 1) { objectMetadataService.updateMetadata(any()) }
-    }
-
-    @Test
-    fun evaluateTaskBoundingBoxOutOfImage() {
-        val (_, taskData, _) = objectDetectingTemplate.generateTask(config, user)
-
-        val answer = BoundingBoxesAnswer(
-            listOf(
-                AbsoluteBoundingBox(213, 897, 500, 600).toRelativeBoundingBox(testImage1Size),
-            ),
-            listOf()
-        )
-
-        assertThrows(IllegalArgumentException::class.java) {
-            objectDetectingTemplate.evaluateTask(taskData, answer)
-        }
-    }
-
-    private fun loadImage(name: String): InputStream {
-        return Thread.currentThread().contextClassLoader.getResourceAsStream(name)!!
     }
 }

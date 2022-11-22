@@ -25,7 +25,7 @@ class UserService(private val userRepo: UserRepository, private val passwordEnco
         }
 
         val hashedPassword = passwordEncoder.encode(password)
-        val user = UserData(userName, hashedPassword, listOf("ROLE_USER"))
+        val user = UserData(userName, hashedPassword, setOf("ROLE_USER"))
         userRepo.insert(user)
     }
 
@@ -44,4 +44,4 @@ class UserService(private val userRepo: UserRepository, private val passwordEnco
     }
 }
 
-data class UserInfoDTO(val userName: String, val authorities: List<String>)
+data class UserInfoDTO(val userName: String, val authorities: Set<String>)

@@ -1,12 +1,11 @@
 package cz.opendatalab.captcha.datamanagement.objectdetection
 
-import cz.opendatalab.captcha.TestConfiguration
+import cz.opendatalab.captcha.TestImages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.util.FileSystemUtils
 import java.nio.file.Paths
-import javax.imageio.ImageIO
 
 internal class ObjectDetectorKotlinDLTest {
 
@@ -14,12 +13,9 @@ internal class ObjectDetectorKotlinDLTest {
 
     @Test
     fun `detect person detected`() {
-        Thread.currentThread().contextClassLoader.getResourceAsStream(TestConfiguration.TEST_IMAGE_1).use {
-            val image = ImageIO.read(it)
-            val detected = objectDetector.detect(image)
-            assertTrue(detected.isNotEmpty())
-            assertTrue(detected.stream().anyMatch{ obj -> obj.label.equals("person") })
-        }
+        val detected = objectDetector.detect(TestImages.IMAGE_1)
+        assertTrue(detected.isNotEmpty())
+        assertTrue(detected.stream().anyMatch{ obj -> obj.label.equals("person") })
     }
 
     @Test

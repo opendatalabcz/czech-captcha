@@ -3,6 +3,7 @@ package cz.opendatalab.captcha.datamanagement.objectstorage
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
+import java.io.FileNotFoundException
 import java.io.InputStream
 import java.net.URL
 import java.nio.file.Files
@@ -10,25 +11,23 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
-interface FileRepository {
-
-    /**
-     * InputStream should be closed manually after use.
-     */
-    fun getFile(path: String): InputStream?
-
-    /**
-     * @returns path
-     */
+interface ObjectRepository {
+    fun getFile(path: String): InputStream
     fun saveFile(content: InputStream, name: String): String
-
     fun removeFile(path: String)
 
     companion object {
-        fun getFile(path: String, repoType: ObjectRepositoryType): InputStream? {
+        /**
+         * InputStream should be closed manually after use.
+         */
+        fun getFile(path: String, repoType: ObjectRepositoryType): InputStream {
             return getRepo(repoType).getFile(path)
         }
 
+        /**
+         * InputStream with content is closed after save.
+         * @returns path to the saved file
+         */
         fun saveFile(content: InputStream, name: String, repoType: ObjectRepositoryType): String {
             return getRepo(repoType).saveFile(content, name)
         }
@@ -37,10 +36,10 @@ interface FileRepository {
             return getRepo(repoType).removeFile(path)
         }
 
-        private fun getRepo(repoType: ObjectRepositoryType): FileRepository {
+        private fun getRepo(repoType: ObjectRepositoryType): ObjectRepository {
             return when(repoType) {
-                ObjectRepositoryType.URL -> UrlFileRepository
-                ObjectRepositoryType.FILESYSTEM -> FilesystemFileRepository
+                ObjectRepositoryType.URL -> UrlObjectRepository
+                ObjectRepositoryType.FILESYSTEM -> FilesystemObjectRepository
                 else -> throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Not implemented")
             }
         }
@@ -48,13 +47,14 @@ interface FileRepository {
 }
 
 
-object UrlFileRepository : FileRepository {
+object UrlObjectRepository : ObjectRepository {
     override fun getFile(path: String): InputStream {
         val url = URL(path)
         return url.openStream()
     }
 
     override fun saveFile(content: InputStream, name: String): String {
+        content.close()
         return name
     }
 
@@ -63,7 +63,7 @@ object UrlFileRepository : FileRepository {
     }
 }
 
-object FilesystemFileRepository : FileRepository {
+object FilesystemObjectRepository : ObjectRepository {
 
     private const val DATA_PATH_PROPERTY = "datamanagement.filesystem.data-path"
     private const val MAX_FILES_IN_DIR_PROPERTY = "datamanagement.filesystem.max-files-per-dir"
@@ -86,8 +86,9 @@ object FilesystemFileRepository : FileRepository {
         }
     }
 
-    override fun getFile(path: String): InputStream? {
-        val filePath = findFile(DATA_PATH, path) ?: return null
+    override fun getFile(path: String): InputStream {
+        val filePath = findFileInBalancedDirs(DATA_PATH, path) ?:
+            throw FileNotFoundException("Cannot find file $path in $DATA_PATH_PROPERTY or any subdirectories.")
         return Files.newInputStream(filePath)
     }
 
@@ -97,7 +98,7 @@ object FilesystemFileRepository : FileRepository {
     }
 
     override fun removeFile(path: String) {
-        val filePath = findFile(DATA_PATH, path) ?: return
+        val filePath = findFileInBalancedDirs(DATA_PATH, path) ?: return
         Files.delete(filePath)
     }
 
@@ -139,16 +140,15 @@ object FilesystemFileRepository : FileRepository {
 
     private fun saveFileToDir(content: InputStream, path: Path, filename: String) {
         val finalPath = path.resolve(filename)
-        Files.copy(content, finalPath, StandardCopyOption.REPLACE_EXISTING)
-        content.close()
+        content.use { Files.copy(it, finalPath, StandardCopyOption.REPLACE_EXISTING) }
     }
 
-    private fun findFile(dir: Path, filename: String): Path? {
+    private fun findFileInBalancedDirs(dir: Path, filename: String): Path? {
         val subDirName = filename[0].toString()
         val subFilename = filename.substring(1)
         val subDir = dir.resolve(subDirName)
         if ( Files.isDirectory(subDir) && !subFilename.startsWith('.')) {
-            return findFile(subDir, subFilename)
+            return findFileInBalancedDirs(subDir, subFilename)
         }
         val filePath = dir.resolve(filename)
         if ( Files.isRegularFile(filePath) ) {

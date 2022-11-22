@@ -13,8 +13,8 @@ import io.mongock.api.annotations.RollbackExecution
 class InitLabelGroup(val labelGroupRepository: LabelGroupRepository, val objectDetector: ObjectDetector) {
     @Execution
     fun changeSet() {
-        labelGroupRepository.insert(LabelGroupLimited("animals", listOf("cat", "dog"), 1))
-        labelGroupRepository.insert(LabelGroupLimited(ObjectDetectionConstants.LABEL_GROUP, objectDetector.getSupportedLabels().toList(), objectDetector.getSupportedLabels().size))
+        labelGroupRepository.insert(LabelGroupLimited("animals", setOf("cat", "dog"), 1))
+        labelGroupRepository.insert(LabelGroupLimited(ObjectDetectionConstants.LABEL_GROUP, objectDetector.getSupportedLabels(), objectDetector.getSupportedLabels().size))
     }
 
     @RollbackExecution

@@ -8,13 +8,11 @@ import java.util.*
 
 object TemplateUtils {
     fun toDisplayImage(objectService: ObjectService, objectMetadata: ObjectMetadata): ImageDisplayData {
-        val imageId = objectMetadata.objectId
+        val imageId = objectMetadata.id
         val format = (objectMetadata.objectType as ImageObjectType).format
 
-        val inputStream = objectService.getById(imageId) ?:
-        throw IllegalStateException("File with id $imageId cannot be accessed.")
-        val base64ImageString = toBase64Image(inputStream.readAllBytes(), format)
-        inputStream.close()
+        val inputStream = objectService.getObjectById(imageId)
+        val base64ImageString = inputStream.use{ toBase64Image(it.readAllBytes(), format) }
 
         return ImageDisplayData(base64ImageString)
     }

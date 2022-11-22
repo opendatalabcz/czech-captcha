@@ -2,11 +2,10 @@ package cz.opendatalab.captcha.datamanagement.objectmetadata
 
 import org.springframework.data.mongodb.core.mapping.Document
 
-@JvmInline
-value class Label(val label: String)
-
 @Document("labelgroup")
-open class LabelGroup(val name: String, val maxCardinality: Int) {
+open class LabelGroup(val name: String,
+                      val maxCardinality: Int) {
+
     open fun rangeContainsLabel(label: String): Boolean = true
     open fun rangeSize(): Int = Int.MAX_VALUE
 
@@ -30,7 +29,9 @@ open class LabelGroup(val name: String, val maxCardinality: Int) {
 }
 
 // contains (0..n) vs 1 labels, where n is labels size
-class LabelGroupLimited(name: String, val labelRange: List<String>, maxCardinality: Int): LabelGroup(name, maxCardinality) {
+class LabelGroupLimited(name: String,
+                        val labelRange: Set<String>,
+                        maxCardinality: Int): LabelGroup(name, maxCardinality) {
     override fun rangeContainsLabel(label: String): Boolean {
         return labelRange.contains(label)
     }
@@ -41,10 +42,13 @@ class LabelGroupLimited(name: String, val labelRange: List<String>, maxCardinali
 }
 
 
-data class Labeling(val isLabeled: Boolean, val labels: List<String>, val negativeLabels: List<String>,
+data class Labeling(val isLabeled: Boolean,
+                    val labels: Set<String>,
+                    val negativeLabels: Set<String>,
                     val labelStatistics: LabelStatistics) {
-    constructor(): this(false, emptyList(), emptyList(), LabelStatistics())
-    constructor(labels: List<String>): this(true, labels, emptyList(), LabelStatistics())
+    constructor(): this(false, emptySet(), emptySet(), LabelStatistics())
+    constructor(labels: Set<String>): this(true, labels, emptySet(), LabelStatistics())
+    constructor(statistics: LabelStatistics): this(false, emptySet(), emptySet(), statistics)
 
     fun recordLabel(positive: Boolean, label: String, maxCardinality: Int, labelRangeSize: Int): Labeling {
         require(!isLabeled)
@@ -62,9 +66,9 @@ data class Labeling(val isLabeled: Boolean, val labels: List<String>, val negati
                 labels.size + negativeLabels.size + 1 == labelRangeSize
         return if (finishedLabeling) {
             if (positive) {
-                Labeling(true, labels + label, emptyList(), labelStatistics)
+                Labeling(true, labels + label, emptySet(), labelStatistics)
             } else {
-                Labeling(true, labels, emptyList(), labelStatistics)
+                Labeling(true, labels, emptySet(), labelStatistics)
             }
         } else {
             if (positive) {

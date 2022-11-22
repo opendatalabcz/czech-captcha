@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
 
+import cz.opendatalab.captcha.datamanagement.ImageUtils
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ImageObjectType
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
@@ -40,13 +41,13 @@ class ObjectDetectingTemplate(
         val unknownImage = data.unknownImage
 
         val objectsDetectingData =
-            knownImage.templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData
+            knownImage.otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData
         val expectedResult = objectsDetectingData.objects[labelGroup]?.get(label)?.result!!
 
         val (knownImageSize, knownImageDisplayData) = getKnownImageInformation(knownImage)
 
         val description = Description("Mark all instances of $label with a rectangle.")
-        val taskData = ImagesWithBoundingBoxes(labelGroup, label, unknownImage.objectId, knownImageSize, expectedResult)
+        val taskData = ImagesWithBoundingBoxes(labelGroup, label, unknownImage.id, knownImageSize, expectedResult)
         val answerSheet = AnswerSheet(
             ListDisplayData(listOf(knownImageDisplayData, toDisplayImage(objectService, unknownImage))),
             AnswerType.MultipleBoundingBox
@@ -59,10 +60,10 @@ class ObjectDetectingTemplate(
         val knownImages = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
         val unknownImages = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
 
-        val detectingImages = images.filter { it.templateData.containsKey(ObjectDetectingConstants.TEMPLATE_DATA_NAME) }
+        val detectingImages = images.filter { it.otherMetadata.containsKey(ObjectDetectingConstants.TEMPLATE_DATA_NAME) }
         for (objectMetadata in detectingImages.shuffled()) {
             val objectsDetectingData =
-                objectMetadata.templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME]!! as ObjectsDetectingData
+                objectMetadata.otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME]!! as ObjectsDetectingData
             for ((labelGroup, labels) in objectsDetectingData.objects.entries.shuffled()) {
                 for ((label, objectLocalizationData) in labels.entries.shuffled()) {
                     if (objectLocalizationData.isLocalized) {
@@ -87,15 +88,15 @@ class ObjectDetectingTemplate(
     }
 
     private fun getKnownImageInformation(knownImage: ObjectMetadata): Pair<ImageSize, ImageDisplayData> {
-        val imageId = knownImage.objectId
+        val imageId = knownImage.id
         val format = (knownImage.objectType as ImageObjectType).format
 
         val inputStream =
-            objectService.getById(imageId) ?: throw IllegalStateException("File with id $imageId cannot be accessed.")
+            objectService.getObjectById(imageId)
 
         val bytes = inputStream.readAllBytes()
         val inputStreamCopy = ByteArrayInputStream(bytes)
-        val image = ImageIO.read(inputStreamCopy) ?: throw IllegalStateException("Cannot read image with id $imageId")
+        val image = ImageUtils.getImageFromInputStream(inputStreamCopy)
         val base64ImageString = toBase64Image(bytes, format)
 
         inputStream.close()
@@ -251,11 +252,11 @@ class ObjectDetectingTemplate(
     ) {
         val imageMetadata = objectMetadataService.getById(imageId)
             ?: throw IllegalStateException("Metadata for file with id $imageId does not exist.")
-        val objectsDetectingData = (imageMetadata.templateData[ObjectDetectingConstants.TEMPLATE_DATA_NAME]
-            ?: throw IllegalStateException("Image with id ${imageMetadata.objectId} does not contain data for object detecting task"))
+        val objectsDetectingData = (imageMetadata.otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME]
+            ?: throw IllegalStateException("Image with id ${imageMetadata.id} does not contain data for object detecting task"))
                 as ObjectsDetectingData
         val objectDetectingData = objectsDetectingData.objects[labelGroup]?.get(label) ?: throw IllegalStateException(
-            "Image with id ${imageMetadata.objectId} does not contain data for object detecting task for " +
+            "Image with id ${imageMetadata.id} does not contain data for object detecting task for " +
                     "$label label from $labelGroup labelgroup."
         )
         if (objectDetectingData.isLocalized) {
@@ -275,8 +276,8 @@ class ObjectDetectingTemplate(
             objectDetectingData.answers.map { answer -> answer.map { box -> box.toAbsoluteBoundingBox(imageSize) } }
         val clusters = createClusters(absoluteAnswers)
         for (cluster in clusters) {
-            // if cluster has more than (ANSWERS_NEEDED_FOR_EVALUATION+1)/2 bounding boxes, make average of them and record it as a result
-            if (cluster.size > (ANSWERS_NEEDED_FOR_EVALUATION + 1) / 2) {
+            // if cluster has more than ANSWERS_NEEDED_FOR_EVALUATION/2 bounding boxes, make average of them and record it as a result
+            if (cluster.size > ANSWERS_NEEDED_FOR_EVALUATION / 2) {
                 objectDetectingData.result.add(getAverageBoundingBox(cluster).toRelativeBoundingBox(imageSize))
             }
         }
@@ -285,8 +286,7 @@ class ObjectDetectingTemplate(
     }
 
     private fun getImageSize(imageId: String): ImageSize {
-        val inputStream = objectService.getById(imageId)
-            ?: throw IllegalArgumentException("File with id $imageId cannot be accessed.")
+        val inputStream = objectService.getObjectById(imageId)
         val image = ImageIO.read(inputStream) ?: throw IllegalStateException("Cannot read image with id $imageId")
         inputStream.close()
         return ImageSize(image.width, image.height)

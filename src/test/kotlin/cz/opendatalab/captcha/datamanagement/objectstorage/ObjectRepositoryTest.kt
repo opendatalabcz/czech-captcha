@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.util.FileSystemUtils
 import java.io.ByteArrayInputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -34,51 +36,68 @@ internal class ObjectRepositoryTest {
     }
     private val testString = "test"
 
+    private fun getInputStream(): InputStream {
+        return ByteArrayInputStream(testString.toByteArray())
+    }
+
+    @AfterEach
+    private fun deleteTestDirsAndFiles() {
+        FileSystemUtils.deleteRecursively(Paths.get(DATA_PATH_STR))
+    }
+
     @Test
-    fun getUrlFile() {
+    fun getFile_url_successful() {
         val url = Path.of("src/test/resources/test_image_1.jpg").toUri().toURL().toString()
-        val result = FileRepository.getFile(url, ObjectRepositoryType.URL)
-        assertNotNull(result)
-        result?.close()
+        assertDoesNotThrow {
+            val result = ObjectRepository.getFile(url, ObjectRepositoryType.URL)
+            result.close()
+        }
     }
 
     @Test
-    fun saveUrlFile() {
+    fun getFile_invalidUrl_shouldThrow() {
+        val url = "http://www.test-page.com/no-file-here.txt"
+        assertThrows(FileNotFoundException::class.java) {
+            val result = ObjectRepository.getFile(url, ObjectRepositoryType.URL)
+            result.close()
+        }
+    }
+
+    @Test
+    fun saveFile_url_successful() {
         val name = "testname"
-        val content = ByteArrayInputStream(testString.toByteArray())
-        val resName = FileRepository.saveFile(content, name, ObjectRepositoryType.URL)
-        assertEquals(resName, name)
+        val content = getInputStream()
+        assertEquals(name, ObjectRepository.saveFile(content, name, ObjectRepositoryType.URL))
     }
 
     @Test
-    fun saveGetRemoveFile() {
-        val content = ByteArrayInputStream(testString.toByteArray())
-        val pathString = FileRepository.saveFile(content, "test_file.txt", ObjectRepositoryType.FILESYSTEM)
+    fun saveFileThenGetFileThenRemoveFile_withOneFile_successful() {
+        val content = getInputStream()
+        val pathString = ObjectRepository.saveFile(content, "test_file.txt", ObjectRepositoryType.FILESYSTEM)
         val path = Paths.get(DATA_PATH_STR, pathString)
         assertTrue(path.isRegularFile())
 
-        testGet(pathString)
+        testGetFile(pathString)
 
-        FileRepository.removeFile(pathString, ObjectRepositoryType.FILESYSTEM)
+        ObjectRepository.removeFile(pathString, ObjectRepositoryType.FILESYSTEM)
         assertFalse(Files.exists(path))
     }
 
-    private fun testGet(pathString: String) {
-        val inputStream = FileRepository.getFile(pathString, ObjectRepositoryType.FILESYSTEM)
-        assertNotNull(inputStream)
-        val fileContent = String(inputStream?.readAllBytes() ?: return)
+    private fun testGetFile(pathString: String) {
+        val inputStream = ObjectRepository.getFile(pathString, ObjectRepositoryType.FILESYSTEM)
+        val fileContent = String(inputStream.readAllBytes())
         assertEquals(fileContent, testString)
         inputStream.close()
     }
 
     @Test
-    fun saveGetRemoveMultipleFilesWithMoreLetters() {
+    fun saveFileThenGetFileThenRemoveFile_multipleFilesWithMoreLetters_shouldCreateSubdirs() {
         val numberOfFiles = MAX_FILES_IN_DIR + 2
         val pathStrings = mutableListOf<String>()
         val paths = mutableListOf<Path>()
         for (i in 1..numberOfFiles) {
-            val content = ByteArrayInputStream(testString.toByteArray())
-            val pathString = FileRepository.saveFile(content, "${i}0.txt", ObjectRepositoryType.FILESYSTEM)
+            val content = getInputStream()
+            val pathString = ObjectRepository.saveFile(content, "${i}0.txt", ObjectRepositoryType.FILESYSTEM)
             pathStrings.add(pathString)
             val path =
                 if (i > MAX_FILES_IN_DIR) {
@@ -90,44 +109,44 @@ internal class ObjectRepositoryTest {
             assertTrue(path.isRegularFile())
         }
         for (pathString in pathStrings) {
-            testGet(pathString)
+            testGetFile(pathString)
         }
-        for (i in 1..numberOfFiles) {
-            FileRepository.removeFile(pathStrings[i - 1], ObjectRepositoryType.FILESYSTEM)
-            assertFalse(Files.exists(paths[i - 1]))
+        for (i in 0 until numberOfFiles) {
+            ObjectRepository.removeFile(pathStrings[i], ObjectRepositoryType.FILESYSTEM)
+            assertFalse(Files.exists(paths[i]))
         }
     }
 
     @Test
-    fun saveGetRemoveMultipleFilesWithOneLetter() {
+    fun saveFileThenGetFileThenRemoveFile_multipleFilesWithOneLetter_shouldNotCreateSubdirs() {
         val numberOfFiles = MAX_FILES_IN_DIR + 2
         val pathStrings = mutableListOf<String>()
         val paths = mutableListOf<Path>()
         for (i in 1..numberOfFiles) {
-            val content = ByteArrayInputStream(testString.toByteArray())
-            val pathString = FileRepository.saveFile(content, "${i}.txt", ObjectRepositoryType.FILESYSTEM)
+            val content = getInputStream()
+            val pathString = ObjectRepository.saveFile(content, "${i}.txt", ObjectRepositoryType.FILESYSTEM)
             pathStrings.add(pathString)
             val path = Paths.get(DATA_PATH_STR, pathString)
             paths.add(path)
             assertTrue(path.isRegularFile())
         }
         for (pathString in pathStrings) {
-            testGet(pathString)
+            testGetFile(pathString)
         }
         for (i in 1..numberOfFiles) {
-            FileRepository.removeFile(pathStrings[i - 1], ObjectRepositoryType.FILESYSTEM)
+            ObjectRepository.removeFile(pathStrings[i - 1], ObjectRepositoryType.FILESYSTEM)
             assertFalse(Files.exists(paths[i - 1]))
         }
     }
 
     @Test
-    fun saveGetRemoveMultipleFilesMovingFilesToNewFolder() {
+    fun saveFileThenGetFileThenRemoveFile_multipleFilesWithSamePrefix_shouldCreateSubdirAndMoveAllFilesWithPrefix() {
         val expectedPaths = mutableListOf<Path>()
         val numberOfFiles = MAX_FILES_IN_DIR + 2
         val pathStrings = mutableListOf<String>()
         for (i in 1..numberOfFiles) {
-            val content = ByteArrayInputStream(testString.toByteArray())
-            val pathString = FileRepository.saveFile(content, "00${i}.txt", ObjectRepositoryType.FILESYSTEM)
+            val content = getInputStream()
+            val pathString = ObjectRepository.saveFile(content, "00${i}.txt", ObjectRepositoryType.FILESYSTEM)
             pathStrings.add(pathString)
             val path =
                 if (i > MAX_FILES_IN_DIR + 1) {
@@ -144,16 +163,11 @@ internal class ObjectRepositoryTest {
             assertTrue(path.isRegularFile())
         }
         for (pathString in pathStrings) {
-            testGet(pathString)
+            testGetFile(pathString)
         }
         for (i in 1..numberOfFiles) {
-            FileRepository.removeFile(pathStrings[i - 1], ObjectRepositoryType.FILESYSTEM)
+            ObjectRepository.removeFile(pathStrings[i - 1], ObjectRepositoryType.FILESYSTEM)
             assertFalse(Files.exists(expectedPaths[i - 1]))
         }
-    }
-
-    @AfterEach
-    private fun deleteTestPath() {
-        FileSystemUtils.deleteRecursively(Paths.get(DATA_PATH_STR))
     }
 }

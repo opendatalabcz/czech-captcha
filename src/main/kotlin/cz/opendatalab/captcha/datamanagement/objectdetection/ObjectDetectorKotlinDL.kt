@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.datamanagement.objectdetection
 
+import cz.opendatalab.captcha.datamanagement.ImageUtils
 import org.imgscalr.Scalr
 import org.jetbrains.kotlinx.dl.api.inference.loaders.ONNXModelHub
 import org.jetbrains.kotlinx.dl.api.inference.onnx.ONNXModels
@@ -7,10 +8,8 @@ import org.jetbrains.kotlinx.dl.dataset.handler.cocoCategories
 import org.jetbrains.kotlinx.dl.dataset.image.ImageConverter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
-import kotlin.math.max
 
 @Component
 class ObjectDetectorKotlinDL(
@@ -26,7 +25,7 @@ class ObjectDetectorKotlinDL(
 
         val detectedObjects = model.detectObjects(tensor)
 
-        return convertToCoordinates(detectedObjects, image)
+        return convertToCoordinates(detectedObjects)
     }
 
     override fun getSupportedLabels(): Set<String> {
@@ -35,18 +34,16 @@ class ObjectDetectorKotlinDL(
         }
     }
 
-    private fun convertToCoordinates(detectedObjects: List<org.jetbrains.kotlinx.dl.api.inference.objectdetection.DetectedObject>,
-                                     image: BufferedImage): List<DetectedObject> {
-        val biggerSide = max(image.width.toDouble(), image.height.toDouble())
+    private fun convertToCoordinates(detectedObjects: List<org.jetbrains.kotlinx.dl.api.inference.objectdetection.DetectedObject>): List<DetectedObject> {
         return detectedObjects.map { obj ->
             DetectedObject(
                 obj.classLabel,
                 obj.probability.toDouble(),
-                AbsoluteBoundingBox(
-                    (obj.xMin * biggerSide).toInt(),
-                    (obj.yMin * biggerSide).toInt(),
-                    ((obj.xMax - obj.xMin) * biggerSide).toInt(),
-                    ((obj.yMax - obj.yMin) * biggerSide).toInt()
+                RelativeBoundingBox(
+                    obj.xMin.toDouble(),
+                    obj.yMin.toDouble(),
+                    (obj.xMax - obj.xMin).toDouble(),
+                    (obj.yMax - obj.yMin).toDouble()
                 )
             )
         }
@@ -54,13 +51,6 @@ class ObjectDetectorKotlinDL(
 
     private fun padImage(inputImage: BufferedImage): BufferedImage {
         val resizedImage = Scalr.resize(inputImage, size)
-        val outputImage = BufferedImage(size, size, BufferedImage.TYPE_INT_BGR)
-        val g2d = outputImage.createGraphics()
-        g2d.color = Color.BLACK
-        g2d.fillRect(0, 0, size, size)
-        g2d.drawImage(resizedImage, 0, 0, null)
-        g2d.dispose()
-
-        return outputImage
+        return ImageUtils.padImageToSquare(resizedImage)
     }
 }

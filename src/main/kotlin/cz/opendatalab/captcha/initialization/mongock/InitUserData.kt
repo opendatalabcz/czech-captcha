@@ -14,11 +14,11 @@ class InitUserData(private val userRepo: UserRepository, private val passwordEnc
     fun changeSet() {
         val admin = UserData("admin",
             passwordEncoder.encode("admin"),
-            listOf("ROLE_USER", "ROLE_ADMIN")
+            setOf("ROLE_USER", "ROLE_ADMIN")
         )
         val user = UserData("user",
             passwordEncoder.encode("user"),
-            listOf("ROLE_USER")
+            setOf("ROLE_USER")
         )
 
         userRepo.insert(listOf(admin, user))

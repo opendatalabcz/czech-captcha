@@ -37,7 +37,7 @@ class TaskTemplateRouter(private val context: ApplicationContext) {
         return templates[taskType] ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Template with given task name is not implemented")
     }
 
-    fun getTaskTypes(): List<String> {
-        return templates.keys.stream().toList()
+    fun getTaskTypes(): Set<String> {
+        return templates.keys
     }
 }
