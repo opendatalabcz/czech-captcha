@@ -56,7 +56,7 @@ data class Labeling(val isLabeled: Boolean,
 
         return when(labelStatistics.recordLabel(label, positive)) {
             LabelingResult.LABELED_POSITIVE, LabelingResult.LABELED_NEGATIVE ->  addLabel(positive, label, maxCardinality, labelRangeSize)
-            LabelingResult.UNDECIDABLE -> this // TODO what should happen?
+            LabelingResult.UNDECIDABLE -> this
             else -> this
         }
     }
@@ -66,9 +66,9 @@ data class Labeling(val isLabeled: Boolean,
                 labels.size + negativeLabels.size + 1 == labelRangeSize
         return if (finishedLabeling) {
             if (positive) {
-                Labeling(true, labels + label, emptySet(), labelStatistics)
+                Labeling(true, labels + label, negativeLabels, labelStatistics)
             } else {
-                Labeling(true, labels, emptySet(), labelStatistics)
+                Labeling(true, labels, negativeLabels + label, labelStatistics)
             }
         } else {
             if (positive) {

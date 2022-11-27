@@ -15,11 +15,8 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-
 
 internal class ObjectMetadataServiceTest {
-
     private val objectMetadataRepo: ObjectMetadataRepository = mockk()
     private val labelGroupRepository: LabelGroupRepository = mockk()
     private val objectService: ObjectService = mockk()
@@ -29,19 +26,66 @@ internal class ObjectMetadataServiceTest {
         ObjectMetadataService(objectMetadataRepo, objectService, labelGroupRepository, objectDetectionService)
 
     private val user = "user"
-    private val originalFilenameTxt = "originalFilename.txt"
-    private val url = "http://www.some-url.com/$originalFilenameTxt"
     private val jpg = "jpg"
+    private val uuid = "123e4567-e89b-12d3-a456-426614174000"
+    private val originalFilename = "originalFilename.$jpg"
+    private val url = "http://www.some-page.com/$originalFilename"
     private val label = "label"
     private val labelGroupName = "labelGroup"
-    private val labelGroup = LabelGroupLimited(labelGroupName, setOf(label), 1)
+    private val labels = setOf(label)
     private val tag = "tag"
-    private val objectMetadataCreateDTO = ObjectMetadataCreateDTO(emptyMap(), emptySet())
-    private val uuid = "123e4567-e89b-12d3-a456-426614174000"
-    private val urlStorageInfo = ObjectStorageInfo(uuid, originalFilenameTxt, url, ObjectRepositoryType.URL)
-    private val fileStorageInfo = ObjectStorageInfo(uuid, originalFilenameTxt, "$uuid.txt", ObjectRepositoryType.FILESYSTEM)
-    private val metadataTxt = ObjectMetadata(
-        uuid, user, "txt", setOf(tag), mapOf(labelGroupName to Labeling(setOf(label)))
+    private val tags = setOf(tag)
+    private val emptyObjectMetadataCreateDTO = ObjectMetadataCreateDTO(emptyMap(), emptySet())
+    private val urlStorageInfo = ObjectStorageInfo(uuid, originalFilename, url, ObjectRepositoryType.URL)
+    private val fileStorageInfo = ObjectStorageInfo(uuid, originalFilename, "$uuid.$jpg", ObjectRepositoryType.FILESYSTEM)
+    private val metadata = ObjectMetadata(
+        uuid, user, jpg, tags, mapOf(labelGroupName to Labeling(labels))
+    )
+    private val metadataCopy = ObjectMetadata(
+        uuid, user, jpg, tags, mapOf(labelGroupName to Labeling(labels))
+    )
+
+    private val relativeBoundingBox = RelativeBoundingBox(0.1, 0.1, 0.1, 0.1)
+    private val metadataWithAnnotations = ObjectMetadata(
+        uuid, user, jpg, tags, mapOf(labelGroupName to Labeling(labels)), mapOf(
+            ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectsDetectingData(
+                mutableMapOf(
+                    labelGroupName to mutableMapOf(
+                        label to ObjectDetectingData(mutableListOf(relativeBoundingBox))
+                    )
+                )
+            )
+        )
+    )
+
+    private val childUuid = "987e4567-e89b-12d3-a456-426614174111"
+    private val odLabel1 = "odLabel1"
+    private val odLabel2 = "odLabel2"
+    private val odLabels = setOf(odLabel1, odLabel2)
+    private val odWantedLabels = setOf(odLabel1)
+    private val imageContent = TestImages.getInputStream1()
+    private val childOriginalName = "${uuid}-detected0.$jpg"
+    private val parentMetadata = ObjectMetadata(uuid, user, jpg, tags, emptyMap())
+    private val parentMetadataCopy = ObjectMetadata(uuid, user, jpg, tags, emptyMap())
+    private val parentMetadataWithChild = ObjectMetadata(
+        uuid, user, jpg, tags, emptyMap(),
+        mapOf(
+            ChildrenImages.OTHER_METADATA_NAME to ChildrenImages(listOf(ChildImage(childUuid, relativeBoundingBox))),
+            ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectsDetectingData(labelGroupName, label)
+        )
+    )
+    private val childLabeling = Labeling(LabelStatistics(mutableMapOf(
+        odLabel1 to LabelStatistic(1, 1),
+        odLabel2 to LabelStatistic(-1, 1))
+    ))
+    private val childMetadata = ObjectMetadata(
+        childUuid, user, jpg, tags,
+        mapOf(ObjectDetectionConstants.LABEL_GROUP to childLabeling),
+        mapOf(ParentImage.OTHER_METADATA_NAME to ParentImage(uuid))
+    )
+    private val expectedODOutput = listOf(
+        parentMetadataWithChild,
+        childMetadata
     )
 
     @Test
@@ -79,7 +123,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlObject(
                 UrlObjectCreateDTO(
                     url,
-                    ObjectMetadataCreateDTO(mapOf(labelGroupName to setOf(label)), setOf(tag))
+                    ObjectMetadataCreateDTO(mapOf(labelGroupName to labels), tags)
                 ), user
             )
         }
@@ -96,7 +140,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlObject(
                 UrlObjectCreateDTO(
                     url,
-                    ObjectMetadataCreateDTO(mapOf(labelGroupName to setOf(label)), setOf(tag))
+                    ObjectMetadataCreateDTO(mapOf(labelGroupName to labels), tags)
                 ), user
             )
         }
@@ -106,40 +150,39 @@ internal class ObjectMetadataServiceTest {
 
     @Test
     fun addUrlObject_successful() {
-        every { labelGroupRepository.findByName(labelGroupName) } returns labelGroup
+        every { labelGroupRepository.findByName(labelGroupName) } returns LabelGroupLimited(labelGroupName, labels, 1)
         every { objectService.saveUrlObject(url) } returns urlStorageInfo
-        every { objectMetadataRepo.insert(metadataTxt) } returns metadataTxt
+        every { objectMetadataRepo.insert(metadata) } returns metadata
 
-        assertEquals(metadataTxt, objectMetadataService.addUrlObject(
+        assertEquals(metadata, objectMetadataService.addUrlObject(
                 UrlObjectCreateDTO(
                     url,
-                    ObjectMetadataCreateDTO(mapOf(labelGroupName to setOf(label)), setOf(tag))
+                    ObjectMetadataCreateDTO(mapOf(labelGroupName to labels), tags)
                 ), user
             ))
 
         verify { labelGroupRepository.findByName(labelGroupName) }
         verify { objectService.saveUrlObject(url) }
-        verify { objectMetadataRepo.insert(metadataTxt) }
+        verify { objectMetadataRepo.insert(metadata) }
     }
 
     @Test
     fun addFileObject_successful() {
-        val content = ByteArrayInputStream("test-content".toByteArray())
-        every { labelGroupRepository.findByName(labelGroupName) } returns labelGroup
-        every { objectService.saveFileObject(content, originalFilenameTxt) } returns fileStorageInfo
-        every { objectMetadataRepo.insert(metadataTxt) } returns metadataTxt
+        every { labelGroupRepository.findByName(labelGroupName) } returns LabelGroupLimited(labelGroupName, labels, 1)
+        every { objectService.saveFileObject(imageContent, originalFilename) } returns fileStorageInfo
+        every { objectMetadataRepo.insert(metadata) } returns metadata
 
-        assertEquals(metadataTxt, objectMetadataService.addFileObject(
-            content,
-            originalFilenameTxt,
+        assertEquals(metadata, objectMetadataService.addFileObject(
+            imageContent,
+            originalFilename,
             FileObjectCreateDTO(
-                ObjectMetadataCreateDTO(mapOf(labelGroupName to setOf(label)), setOf(tag))
+                ObjectMetadataCreateDTO(mapOf(labelGroupName to labels), tags)
             ), user
         ))
 
         verify { labelGroupRepository.findByName(labelGroupName) }
-        verify { objectService.saveFileObject(content, originalFilenameTxt) }
-        verify { objectMetadataRepo.insert(metadataTxt) }
+        verify { objectService.saveFileObject(imageContent, originalFilename) }
+        verify { objectMetadataRepo.insert(metadata) }
     }
 
     @Test
@@ -148,7 +191,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlImageWithOD(
                 UrlImageCreateDTO(
                     url,
-                    objectMetadataCreateDTO,
+                    emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
                         ObjectDetectionParametersDTO(emptyMap(), 1.2, 0.7),
                         null
@@ -164,7 +207,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlImageWithOD(
                 UrlImageCreateDTO(
                     url,
-                    objectMetadataCreateDTO,
+                    emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
                         ObjectDetectionParametersDTO(emptyMap(), 1.2, -0.7),
                         null
@@ -180,7 +223,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlImageWithOD(
                 UrlImageCreateDTO(
                     url,
-                    objectMetadataCreateDTO,
+                    emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
                         ObjectDetectionParametersDTO(emptyMap(), 0.8, 0.7),
                         null
@@ -198,7 +241,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlImageWithOD(
                 UrlImageCreateDTO(
                     url,
-                    objectMetadataCreateDTO,
+                    emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
                         ObjectDetectionParametersDTO(mapOf(labelGroupName to setOf("label")), 0.5, 0.7),
                         null
@@ -219,7 +262,7 @@ internal class ObjectMetadataServiceTest {
             objectMetadataService.addUrlImageWithOD(
                 UrlImageCreateDTO(
                     url,
-                    objectMetadataCreateDTO,
+                    emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
                         ObjectDetectionParametersDTO(mapOf(labelGroupName to setOf("label")), 0.5, 0.7),
                         null
@@ -232,69 +275,117 @@ internal class ObjectMetadataServiceTest {
     }
 
     @Test
+    fun addUrlImageWithOD_addAnnotations_successful() {
+        every { labelGroupRepository.findByName(labelGroupName) } returns LabelGroupLimited(labelGroupName, labels, 1)
+        every { objectService.saveUrlObject(url) } returns urlStorageInfo
+        every { objectMetadataRepo.insert(metadata) } returns metadata
+        every { objectMetadataRepo.save(metadataWithAnnotations) } returns metadataWithAnnotations
+
+        assertEquals(
+            listOf(metadataWithAnnotations), objectMetadataService.addUrlImageWithOD(
+            UrlImageCreateDTO(
+                url,
+                ObjectMetadataCreateDTO(mapOf(labelGroupName to labels), tags),
+                ObjectDetectionDTO(null, listOf(AnnotationDTO(labelGroupName, label, relativeBoundingBox)))
+            ), user
+        ))
+
+        verify { labelGroupRepository.findByName(labelGroupName) }
+        verify { objectService.saveUrlObject(url) }
+        verify { objectMetadataRepo.insert(metadataCopy) }
+        verify { objectMetadataRepo.save(metadataWithAnnotations) }
+    }
+
+    @Test
+    fun addFileImageWithOD_addAnnotations_successful() {
+        every { labelGroupRepository.findByName(labelGroupName) } returns LabelGroupLimited(labelGroupName, labels, 1)
+        every { objectService.saveFileObject(any(), originalFilename) } returns fileStorageInfo
+        every { objectMetadataRepo.insert(metadata) } returns metadata
+        every { objectMetadataRepo.save(metadataWithAnnotations) } returns metadataWithAnnotations
+
+        assertEquals(
+            listOf(metadataWithAnnotations), objectMetadataService.addFileImageWithOD(
+                imageContent, originalFilename,
+                FileImageCreateDTO(
+                    ObjectMetadataCreateDTO(mapOf(labelGroupName to labels), tags),
+                    ObjectDetectionDTO(null, listOf(AnnotationDTO(labelGroupName, label, relativeBoundingBox)))
+                ), user
+            ))
+
+        verify { labelGroupRepository.findByName(labelGroupName) }
+        verify { objectService.saveFileObject(any(), originalFilename) }
+        verify { objectMetadataRepo.insert(metadataCopy) }
+        verify { objectMetadataRepo.save(metadataWithAnnotations) }
+    }
+
+    @Test
     fun addUrlImageWithOD_doOD_successful() {
-        addImage(true)
+        every { objectService.saveUrlObject(url) } returns urlStorageInfo
+        every { objectService.getImageById(parentMetadata.id) } returns TestImages.IMAGE_1
+        initODMocks()
+
+        val result = callAddUrlImageWithOD()
+        assertEquals(expectedODOutput, result)
+
+        verifyODMocks()
+        verify { objectService.saveUrlObject(url) }
+        verify { objectService.getImageById(parentMetadata.id) }
+    }
+
+    private fun callAddUrlImageWithOD(): List<ObjectMetadata> {
+        return objectMetadataService.addUrlImageWithOD(
+            UrlImageCreateDTO(
+                url,
+                ObjectMetadataCreateDTO(emptyMap(), tags),
+                ObjectDetectionDTO(
+                    ObjectDetectionParametersDTO(
+                        mapOf(
+                            ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
+                            labelGroupName to labels
+                        ), 0.8, 0.9
+                    ), null
+                )
+            ), user
+        )
     }
 
     @Test
     fun addFileImageWithOD_doOD_successful() {
-        addImage(false)
+        every { objectService.saveFileObject(any(), originalFilename) } returns fileStorageInfo
+        initODMocks()
+
+        val result = callAddFileImageWithOD()
+        assertEquals(expectedODOutput, result)
+
+        verifyODMocks()
+        verify { objectService.saveFileObject(any(), originalFilename) }
     }
 
-    private fun addImage(urlImage: Boolean) {
-        val content = TestImages.getInputStream1()
-        val originalFilename = "file.jpg"
-        val childOriginalName = "${uuid}-detected0.jpg"
-        val url = "http://www.some-page.com/$originalFilename"
-        val tags = setOf("tag1")
-        val childId1 = "childId1"
-        val odLabel1 = "odLabel1"
-        val odLabel2 = "odLabel2"
-        val odLabels = setOf(odLabel1, odLabel2)
-        val nonOdLabelGroup = "nonOdLabelGroup"
-        val nonOdLabel = "nonOdLabel"
-        val odWantedLabels = setOf(odLabel1)
-        val nonOdWantedLabels = setOf(nonOdLabel)
-        val relativeBoundingBox = RelativeBoundingBox(0.1, 0.1, 0.1, 0.1)
-        val parentMetadata = ObjectMetadata(uuid, user, jpg, tags, emptyMap())
-        val parentMetadataCopy = ObjectMetadata(uuid, user, jpg, tags, emptyMap())
-        val parentMetadataWithChild = ObjectMetadata(
-            uuid, user, jpg, tags, emptyMap(),
-            mapOf(
-                ChildrenImages.OTHER_METADATA_NAME to ChildrenImages(listOf(ChildImage(childId1, relativeBoundingBox))),
-                ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectsDetectingData(
-                    mutableMapOf(
-                        nonOdLabelGroup to mutableMapOf(
-                            nonOdLabel to ObjectDetectingData()
-                        )
-                    )
+    private fun callAddFileImageWithOD(): List<ObjectMetadata> {
+        return objectMetadataService.addFileImageWithOD(
+            imageContent, originalFilename, FileImageCreateDTO(
+                ObjectMetadataCreateDTO(emptyMap(), tags),
+                ObjectDetectionDTO(
+                    ObjectDetectionParametersDTO(
+                        mapOf(
+                            ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
+                            labelGroupName to labels
+                        ), 0.8, 0.9
+                    ), null
                 )
-            )
+            ), user
         )
-        val childLabeling = Labeling(LabelStatistics(mutableMapOf(
-            odLabel1 to LabelStatistic(1, 1),
-            odLabel2 to LabelStatistic(-1, 1))
-        ))
-        val childMetadata = ObjectMetadata(
-            childId1, user, jpg, tags,
-            mapOf(ObjectDetectionConstants.LABEL_GROUP to childLabeling),
-            mapOf(ParentImage.OTHER_METADATA_NAME to ParentImage(uuid))
-        )
+    }
 
+    private fun initODMocks() {
         every { labelGroupRepository.findByName(ObjectDetectionConstants.LABEL_GROUP) } returns
                 LabelGroupLimited(ObjectDetectionConstants.LABEL_GROUP, odLabels, 1)
-        every { labelGroupRepository.findByName(nonOdLabelGroup) } returns
-                LabelGroupLimited(nonOdLabelGroup, nonOdWantedLabels, 1)
-        every { objectService.saveFileObject(any(), originalFilename) } returns
-                ObjectStorageInfo(uuid, originalFilename, "$uuid.jpg", ObjectRepositoryType.FILESYSTEM)
-        every { objectService.saveUrlObject(url) } returns
-                ObjectStorageInfo(uuid, originalFilename, url, ObjectRepositoryType.URL)
+        every { labelGroupRepository.findByName(labelGroupName) } returns
+                LabelGroupLimited(labelGroupName, labels, 1)
         every { objectMetadataRepo.insert(parentMetadata) } returns
                 parentMetadata
-        every { objectService.getImageById(parentMetadata.id) } returns
-                TestImages.IMAGE_1
         every { objectService.saveFileObject(any(), childOriginalName) } returns
-                ObjectStorageInfo(childId1, childOriginalName, "$childId1.jpg", ObjectRepositoryType.FILESYSTEM)
+                ObjectStorageInfo(childUuid, childOriginalName, "$childUuid.$jpg", ObjectRepositoryType.FILESYSTEM)
         every { objectDetectionService.detectObjectsWithOverlaps(any<BufferedImage>(), odWantedLabels) } returns
                 listOf(DetectedObjectWithOverlappingLabels(mapOf(odLabel1 to 0.81), relativeBoundingBox))
         every { objectDetectionService.getSupportedLabels() } returns
@@ -303,58 +394,16 @@ internal class ObjectMetadataServiceTest {
                 childMetadata
         every { objectMetadataRepo.save(parentMetadataWithChild) } returns
                 parentMetadataWithChild
+    }
 
-        val result = if (urlImage) {
-            objectMetadataService.addUrlImageWithOD(
-                UrlImageCreateDTO(
-                    url,
-                    ObjectMetadataCreateDTO(emptyMap(), tags),
-                    ObjectDetectionDTO(
-                        ObjectDetectionParametersDTO(
-                            mapOf(
-                                ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
-                                nonOdLabelGroup to nonOdWantedLabels
-                            ), 0.8, 0.9
-                        ), null
-                    )
-                ), user
-            )
-        } else {
-            objectMetadataService.addFileImageWithOD(
-                content, originalFilename, FileImageCreateDTO(
-                    ObjectMetadataCreateDTO(emptyMap(), tags),
-                    ObjectDetectionDTO(
-                        ObjectDetectionParametersDTO(
-                            mapOf(
-                                ObjectDetectionConstants.LABEL_GROUP to odWantedLabels,
-                                nonOdLabelGroup to nonOdWantedLabels
-                            ), 0.8, 0.9
-                        ), null
-                    )
-                ), user
-            )
-        }
-        val expected = listOf(
-            parentMetadataWithChild,
-            childMetadata
-        )
-
-        assertEquals(expected, result)
-
-        if (urlImage) {
-            verify { objectService.saveUrlObject(url) }
-            verify { objectService.getImageById(parentMetadata.id) }
-        } else {
-            verify { objectService.saveFileObject(any(), originalFilename) }
-        }
+    private fun verifyODMocks() {
         verify { labelGroupRepository.findByName(ObjectDetectionConstants.LABEL_GROUP) }
-        verify { labelGroupRepository.findByName(nonOdLabelGroup) }
+        verify { labelGroupRepository.findByName(labelGroupName) }
+        verify { objectMetadataRepo.insert(parentMetadataCopy) }
         verify { objectService.saveFileObject(any(), childOriginalName) }
         verify { objectDetectionService.detectObjectsWithOverlaps(any<BufferedImage>(), odWantedLabels) }
         verify { objectDetectionService.getSupportedLabels() }
         verify { objectMetadataRepo.insert(childMetadata) }
         verify { objectMetadataRepo.save(parentMetadataWithChild) }
-        verify { objectMetadataRepo.insert(parentMetadataCopy) }
-        content.close()
     }
 }

@@ -6,6 +6,8 @@ import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 // label group -> label -> ObjectLocalizationData
 data class ObjectsDetectingData(val objects: MutableMap<String, MutableMap<String, ObjectDetectingData>>): OtherMetadataType {
     constructor(): this(mutableMapOf())
+    constructor(labelGroup: String): this(mutableMapOf(labelGroup to mutableMapOf()))
+    constructor(labelGroup: String, label: String): this(mutableMapOf(labelGroup to mutableMapOf(label to ObjectDetectingData())))
 }
 
 data class ObjectDetectingData(var isLocalized: Boolean, val result: MutableList<RelativeBoundingBox>, val answers: MutableList<List<RelativeBoundingBox>>) {

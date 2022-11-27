@@ -215,6 +215,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         if (addAnnotations) {
             addAnnotations(parentMetadata, urlImageCreateDTO.objectDetection.annotations!!)
         }
+        objectMetadataRepo.save(parentMetadata)
         return allAddedObjects
     }
 
@@ -246,6 +247,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         if (addAnnotations) {
             addAnnotations(parentMetadata, fileImageCreateDTO.objectDetection.annotations!!)
         }
+        objectMetadataRepo.save(parentMetadata)
         return allAddedObjects
     }
 
@@ -316,7 +318,6 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
                 addDataForODTask(parent, labelGroup, labels)
             }
         }
-        objectMetadataRepo.save(parent)
         return detectedObjects
     }
 
@@ -428,6 +429,12 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     }
 
     private fun addAnnotations(metadata: ObjectMetadata, annotations: List<AnnotationDTO>) {
-        TODO("Not yet implemented")
+        val detectingData = getOrCreateObjectsDetectingData(metadata.otherMetadata)
+        for (annotation in annotations) {
+            val labelDetecting = detectingData.objects.getOrPut(annotation.labelGroup) { mutableMapOf() }
+            val objectDetectingData = labelDetecting.getOrPut(annotation.label) { ObjectDetectingData() }
+            objectDetectingData.isLocalized = true
+            objectDetectingData.result.add(annotation.boundingBox)
+        }
     }
 }
