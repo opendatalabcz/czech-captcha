@@ -32,7 +32,6 @@ class VerificationOrchestrationService(private val siteConfigService: SiteConfig
     }
 
     fun evaluateAnswer(taskId: String, answer: Answer): TokenDTO {
-        // todo this should be atomic operation
         val task = taskRepository.popById(taskId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found by taskId $taskId, Invalid taskId or task expired")
 

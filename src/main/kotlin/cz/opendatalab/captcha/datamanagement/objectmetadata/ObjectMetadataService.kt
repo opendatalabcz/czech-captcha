@@ -2,6 +2,7 @@ package cz.opendatalab.captcha.datamanagement.objectmetadata
 
 import cz.opendatalab.captcha.datamanagement.ImageUtils
 import cz.opendatalab.captcha.Utils
+import cz.opendatalab.captcha.Utils.getBytesFromInputStream
 import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectdetection.DetectedObjectWithOverlappingLabels
 import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionConstants
@@ -9,16 +10,11 @@ import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionServ
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectsDetectingData
-import org.apache.commons.io.IOUtils
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import kotlin.math.abs
 
@@ -251,13 +247,6 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         return allAddedObjects
     }
 
-    private fun getBytesFromInputStream(content: InputStream): ByteArray {
-        ByteArrayOutputStream().use { os ->
-            content.use { content -> IOUtils.copy(content, os) }
-            return os.toByteArray()
-        }
-    }
-
     private fun getOperationsToDoAndCheckTheirParameters(objectDetectionDTO: ObjectDetectionDTO): Pair<Boolean, Boolean> {
         var doObjectDetection = false
         var addAnnotations = false
@@ -412,29 +401,26 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     ) {
         val objectsDetectingData = getOrCreateObjectsDetectingData(metadata.otherMetadata)
         objectsDetectingData.objects[labelGroupName] =
-            mutableMapOf(*labels.map { it to ObjectDetectingData() }
+            mutableMapOf(*labels.map { it to ObjectDetectionData() }
                 .toTypedArray())
     }
 
-    private fun getOrCreateObjectsDetectingData(otherMetadata: MutableMap<String, OtherMetadataType>): ObjectsDetectingData {
+    private fun getOrCreateObjectsDetectingData(otherMetadata: MutableMap<String, OtherMetadataType>): ObjectsDetectionData {
         otherMetadata.putIfAbsent(
-            ObjectDetectingConstants.TEMPLATE_DATA_NAME,
-            ObjectsDetectingData()
+            ObjectsDetectionData.OTHER_METADATA_NAME,
+            ObjectsDetectionData()
         )
-        val objectsDetectingData = otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME]
-        if (objectsDetectingData !is ObjectsDetectingData) {
-            throw IllegalStateException("Other metadata with name ${ObjectDetectingConstants.TEMPLATE_DATA_NAME} is not in format for object detection.")
+        val objectsDetectingData = otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME]
+        if (objectsDetectingData !is ObjectsDetectionData) {
+            throw IllegalStateException("Other metadata with name ${ObjectsDetectionData.OTHER_METADATA_NAME} is not in format for object detection.")
         }
         return objectsDetectingData
     }
 
     private fun addAnnotations(metadata: ObjectMetadata, annotations: List<AnnotationDTO>) {
-        val detectingData = getOrCreateObjectsDetectingData(metadata.otherMetadata)
+        val objectsDetectionData = getOrCreateObjectsDetectingData(metadata.otherMetadata)
         for (annotation in annotations) {
-            val labelDetecting = detectingData.objects.getOrPut(annotation.labelGroup) { mutableMapOf() }
-            val objectDetectingData = labelDetecting.getOrPut(annotation.label) { ObjectDetectingData() }
-            objectDetectingData.isLocalized = true
-            objectDetectingData.result.add(annotation.boundingBox)
+            objectsDetectionData.getOrCreateODData(annotation.labelGroup, annotation.label).result.add(annotation.boundingBox)
         }
     }
 }

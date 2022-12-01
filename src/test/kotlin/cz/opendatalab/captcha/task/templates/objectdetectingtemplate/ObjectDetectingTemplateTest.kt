@@ -1,12 +1,12 @@
 package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
 
 import cz.opendatalab.captcha.TestImages
+import cz.opendatalab.captcha.datamanagement.ImageUtils
 import cz.opendatalab.captcha.datamanagement.objectmetadata.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import cz.opendatalab.captcha.task.templates.ObjectDetectingGenerationConfig
-import cz.opendatalab.captcha.task.templates.TemplateUtils
 import cz.opendatalab.captcha.verification.entities.*
 import io.mockk.every
 import io.mockk.mockk
@@ -35,13 +35,13 @@ internal class ObjectDetectingTemplateTest {
         AbsoluteBoundingBox(213, 898, 158, 83).toRelativeBoundingBox(testImage1Size),
         AbsoluteBoundingBox(494, 921, 151, 60).toRelativeBoundingBox(testImage1Size)
     )
-    private val objectsDetectingDataFinished =
-        ObjectsDetectingData(mutableMapOf(labelgroup to mutableMapOf(label to ObjectDetectingData(expectedResult))))
-    private val objectsDetectingDataNotFinished = ObjectsDetectingData(
+    private val objectsDetectionDataFinished =
+        ObjectsDetectionData(mutableMapOf(labelgroup to mutableMapOf(label to ObjectDetectionData(expectedResult))))
+    private val objectsDetectionDataNotFinished = ObjectsDetectionData(
         mutableMapOf(
             labelgroup to mutableMapOf(
-                label to ObjectDetectingData(
-                    false, mutableListOf(), mutableListOf(
+                label to ObjectDetectionData(
+                    mutableListOf(), mutableListOf(
                         // answer 1
                         listOf(
                             AbsoluteBoundingBox(408, 240, 101, 139).toRelativeBoundingBox(testImage2Size), // object 1
@@ -112,7 +112,7 @@ internal class ObjectDetectingTemplateTest {
             jpg,
             emptySet(),
             mutableMapOf(),
-            mutableMapOf(ObjectDetectingConstants.TEMPLATE_DATA_NAME to objectsDetectingDataFinished)
+            mutableMapOf(ObjectsDetectionData.OTHER_METADATA_NAME to objectsDetectionDataFinished)
         ),
         ObjectMetadata(
             id3,
@@ -120,7 +120,7 @@ internal class ObjectDetectingTemplateTest {
             jpg,
             emptySet(),
             mutableMapOf(),
-            mutableMapOf(ObjectDetectingConstants.TEMPLATE_DATA_NAME to objectsDetectingDataNotFinished)
+            mutableMapOf(ObjectsDetectionData.OTHER_METADATA_NAME to objectsDetectionDataNotFinished)
         )
     )
 
@@ -134,8 +134,10 @@ internal class ObjectDetectingTemplateTest {
                 ObjectTypeEnum.IMAGE
             )
         } returns metadata
-        every { objectService.getObjectById(id2) } returns TestImages.getInputStream1()
-        every { objectService.getObjectById(id3) } answers { TestImages.getInputStream2() }
+        every { objectService.getImageById(id2) } returns TestImages.IMAGE_1
+        every { objectService.getImageById(id3) } answers { TestImages.IMAGE_2 }
+        every { objectService.getImageBase64StringById(id2) } returns TestImages.getBase64StringImage1(jpg)
+        every { objectService.getImageBase64StringById(id3) } answers { TestImages.getBase64StringImage2(jpg) }
     }
 
     @Test
@@ -162,17 +164,16 @@ internal class ObjectDetectingTemplateTest {
         assertTrue(displayData.listData[0] is ImageDisplayData)
         assertTrue(displayData.listData[1] is ImageDisplayData)
         val testImage1 = TestImages.getInputStream1().use {
-            TemplateUtils.toBase64Image(it.readAllBytes(), jpg)
+            ImageUtils.getBase64StringWithImage(it.readAllBytes(), jpg)
         }
         val testImage2 = TestImages.getInputStream2().use {
-            TemplateUtils.toBase64Image(it.readAllBytes(), jpg)
+            ImageUtils.getBase64StringWithImage(it.readAllBytes(), jpg)
         }
-        assertEquals(testImage1, (displayData.listData[0] as ImageDisplayData).base64ImageString)
-        assertEquals(testImage2, (displayData.listData[1] as ImageDisplayData).base64ImageString)
+        assertEquals(testImage1, (displayData.listData[0] as ImageDisplayData).base64Image)
+        assertEquals(testImage2, (displayData.listData[1] as ImageDisplayData).base64Image)
 
         verify { objectMetadataService.getFiltered(user, config.tags, config.owners, ObjectTypeEnum.IMAGE) }
-        verify { objectService.getObjectById(id2) }
-        verify { objectService.getObjectById(id3) }
+        verify { objectService.getImageById(id2) }
     }
 
     @Test
@@ -213,11 +214,11 @@ internal class ObjectDetectingTemplateTest {
     fun evaluateTaskSuccessfulWithoutDetectingEvaluation() {
         // remove answers from metadata
         val metadataCopy = metadata.toMutableList()
-        val objectsDetectingData =
-            (metadataCopy[2].otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData).objects[labelgroup]?.get(
+        val objectsDetectionData =
+            (metadataCopy[2].otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME] as ObjectsDetectionData).objects[labelgroup]?.get(
                 label
             )!!
-        objectsDetectingData.answers.clear()
+        objectsDetectionData.answers.clear()
         every {
             objectMetadataService.getFiltered(
                 user,
@@ -244,9 +245,9 @@ internal class ObjectDetectingTemplateTest {
         val result = objectDetectingTemplate.evaluateTask(taskData, answer)
 
         assertEquals(1.0, result.evaluation)
-        assertFalse(objectsDetectingData.isLocalized)
-        assertTrue(objectsDetectingData.result.isEmpty())
-        assertEquals(1, objectsDetectingData.answers.size)
+        assertFalse(objectsDetectionData.isDetected())
+        assertTrue(objectsDetectionData.result.isEmpty())
+        assertEquals(1, objectsDetectionData.answers.size)
 
         verify(exactly = 1) { objectMetadataService.getById(id3) }
         verify(exactly = 1) { objectMetadataService.updateMetadata(any()) }
@@ -256,8 +257,8 @@ internal class ObjectDetectingTemplateTest {
     fun evaluateTaskSuccessfulWithDetectingEvaluation() {
         every { objectMetadataService.getById(id3) } returns metadata[2]
         every { objectMetadataService.updateMetadata(any()) } returns metadata[2]
-        val objectsDetectingData =
-            (metadata[2].otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData).objects[labelgroup]?.get(
+        val objectsDetectionData =
+            (metadata[2].otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME] as ObjectsDetectionData).objects[labelgroup]?.get(
                 label
             )!!
 
@@ -277,16 +278,16 @@ internal class ObjectDetectingTemplateTest {
         val result = objectDetectingTemplate.evaluateTask(taskData, answer)
 
         assertEquals(0.8986787711761368, result.evaluation)
-        assertTrue(objectsDetectingData.isLocalized)
-        assertEquals(2, objectsDetectingData.result.size)
+        assertTrue(objectsDetectionData.isDetected())
+        assertEquals(2, objectsDetectionData.result.size)
         assertTrue(
-            objectsDetectingData.result.contains(
+            objectsDetectionData.result.contains(
                 AbsoluteBoundingBox(408, 240, 101, 139).toRelativeBoundingBox(
                     testImage2Size
                 )
             )
         )
-        assertEquals(11, objectsDetectingData.answers.size)
+        assertEquals(11, objectsDetectionData.answers.size)
 
         verify(exactly = 1) { objectMetadataService.getById(id3) }
         verify(exactly = 1) { objectMetadataService.updateMetadata(any()) }

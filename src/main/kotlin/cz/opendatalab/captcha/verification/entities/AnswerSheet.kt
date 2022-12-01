@@ -13,7 +13,7 @@ sealed class DisplayData {
 
 object EmptyDisplayData: DisplayData()
 
-data class ImageDisplayData(val base64ImageString: String): DisplayData()
+data class ImageDisplayData(val base64Image: String): DisplayData()
 
 data class ListDisplayData(val listData: List<DisplayData>): DisplayData()
 

@@ -6,9 +6,6 @@ import cz.opendatalab.captcha.datamanagement.objectdetection.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectRepositoryType
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingConstants
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectDetectingData
-import cz.opendatalab.captcha.task.templates.objectdetectingtemplate.ObjectsDetectingData
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -48,10 +45,10 @@ internal class ObjectMetadataServiceTest {
     private val relativeBoundingBox = RelativeBoundingBox(0.1, 0.1, 0.1, 0.1)
     private val metadataWithAnnotations = ObjectMetadata(
         uuid, user, jpg, tags, mapOf(labelGroupName to Labeling(labels)), mapOf(
-            ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectsDetectingData(
+            ObjectsDetectionData.OTHER_METADATA_NAME to ObjectsDetectionData(
                 mutableMapOf(
                     labelGroupName to mutableMapOf(
-                        label to ObjectDetectingData(mutableListOf(relativeBoundingBox))
+                        label to ObjectDetectionData(mutableListOf(relativeBoundingBox))
                     )
                 )
             )
@@ -71,7 +68,7 @@ internal class ObjectMetadataServiceTest {
         uuid, user, jpg, tags, emptyMap(),
         mapOf(
             ChildrenImages.OTHER_METADATA_NAME to ChildrenImages(listOf(ChildImage(childUuid, relativeBoundingBox))),
-            ObjectDetectingConstants.TEMPLATE_DATA_NAME to ObjectsDetectingData(labelGroupName, label)
+            ObjectsDetectionData.OTHER_METADATA_NAME to ObjectsDetectionData(labelGroupName, label)
         )
     )
     private val childLabeling = Labeling(LabelStatistics(mutableMapOf(

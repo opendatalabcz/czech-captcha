@@ -39,12 +39,32 @@ data class ObjectMetadata(@Id val id: String,
     }
 
     fun containsNegativeLabel(labelGroup: String, label: String): Boolean {
-        return labels[labelGroup]?.let { (it.isLabeled && !it.labels.contains(label)) ||
-                (!it.isLabeled && it.negativeLabels.contains(label)) } ?: false
+        return labels[labelGroup]?.let {
+            (it.isLabeled && !it.labels.contains(label)) ||
+                    (!it.isLabeled && it.negativeLabels.contains(label))
+        } ?: false
     }
 
     fun containsUnresolvedLabel(labelGroup: String, label: String): Boolean {
-        return labels[labelGroup]?.let { !it.isLabeled && !it.labels.contains(label) && !it.negativeLabels.contains(label) } ?: true
+        return labels[labelGroup]?.let {
+            !it.isLabeled && !it.labels.contains(label) && !it.negativeLabels.contains(
+                label
+            )
+        } ?: true
+    }
+
+    fun containsObjectsDetectionData(): Boolean {
+        otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME] ?: return false
+        return true
+    }
+
+    fun getObjectsDetectionData(): ObjectsDetectionData? {
+        val odData = otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME] ?: return null
+        return odData as ObjectsDetectionData
+    }
+
+    fun getOrCreateObjectsDetectionData(): ObjectsDetectionData {
+        return otherMetadata.getOrPut(ObjectsDetectionData.OTHER_METADATA_NAME) { ObjectsDetectionData() } as ObjectsDetectionData
     }
 }
 
@@ -71,23 +91,54 @@ data class ImageObjectType(override val format: String): ObjectType {
     override val type = ObjectTypeEnum.IMAGE
 }
 
-data class SoundObjectType(override val format: String): ObjectType {
+data class SoundObjectType(override val format: String) : ObjectType {
     override val type = ObjectTypeEnum.SOUND
 }
 
-data class TextObjectType(override val format: String): ObjectType {
+data class TextObjectType(override val format: String) : ObjectType {
     override val type = ObjectTypeEnum.TEXT_FILE
 }
 
 interface OtherMetadataType
 
-data class ParentImage(val id: String): OtherMetadataType {
+// label group -> label -> ObjectLocalizationData
+data class ObjectsDetectionData(val objects: MutableMap<String, MutableMap<String, ObjectDetectionData>>) :
+    OtherMetadataType {
+    constructor() : this(mutableMapOf())
+    constructor(labelGroup: String) : this(mutableMapOf(labelGroup to mutableMapOf()))
+    constructor(
+        labelGroup: String,
+        label: String
+    ) : this(mutableMapOf(labelGroup to mutableMapOf(label to ObjectDetectionData())))
+
+    fun getOrCreateODData(labelGroup: String, label: String): ObjectDetectionData {
+        return objects.getOrPut(labelGroup) { mutableMapOf() }.getOrPut(label) { ObjectDetectionData() }
+    }
+
+    companion object {
+        const val OTHER_METADATA_NAME = "object-detection"
+    }
+}
+
+data class ObjectDetectionData(
+    val result: MutableList<RelativeBoundingBox>,
+    val answers: MutableList<List<RelativeBoundingBox>>
+) {
+    constructor(result: List<RelativeBoundingBox>) : this(result.toMutableList(), mutableListOf())
+    constructor() : this(mutableListOf(), mutableListOf())
+
+    fun isDetected(): Boolean {
+        return result.isNotEmpty()
+    }
+}
+
+data class ParentImage(val id: String) : OtherMetadataType {
     companion object {
         const val OTHER_METADATA_NAME = "parent-image"
     }
 }
 
-data class ChildrenImages(val images: List<ChildImage>): OtherMetadataType {
+data class ChildrenImages(val images: List<ChildImage>) : OtherMetadataType {
     companion object {
         const val OTHER_METADATA_NAME = "children-images"
     }

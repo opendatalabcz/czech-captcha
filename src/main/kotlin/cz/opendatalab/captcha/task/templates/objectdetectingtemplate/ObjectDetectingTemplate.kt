@@ -1,24 +1,17 @@
 package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
 
-import cz.opendatalab.captcha.datamanagement.ImageUtils
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ImageObjectType
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectTypeEnum
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectmetadata.*
 import cz.opendatalab.captcha.task.templates.GenerationConfig
 import cz.opendatalab.captcha.task.templates.ObjectDetectingGenerationConfig
 import cz.opendatalab.captcha.task.templates.TaskTemplate
-import cz.opendatalab.captcha.task.templates.TemplateUtils.toBase64Image
-import cz.opendatalab.captcha.task.templates.TemplateUtils.toDisplayImage
 import cz.opendatalab.captcha.verification.entities.*
 import org.springframework.stereotype.Service
-import java.io.ByteArrayInputStream
-import javax.imageio.ImageIO
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 
 
 @Service("OBJECT_DETECTING")
@@ -30,79 +23,59 @@ class ObjectDetectingTemplate(
         generationConfig: GenerationConfig,
         currentUser: String
     ): Triple<Description, TaskData, AnswerSheet> {
-        val config = generationConfig as ObjectDetectingGenerationConfig
-        val filteredImages =
-            objectMetadataService.getFiltered(currentUser, config.tags, config.owners, ObjectTypeEnum.IMAGE)
-        val data = selectObjectDetectingTaskData(filteredImages)
+        val odTaskData = getImagesWithSameKnownAndUnknownLabel(currentUser, generationConfig as ObjectDetectingGenerationConfig)
 
-        val labelGroup = data.labelGroup
-        val label = data.label
-        val knownImage = data.knownImage
-        val unknownImage = data.unknownImage
+        val labelGroup = odTaskData.labelGroup
+        val label = odTaskData.label
+        val knownImage = odTaskData.knownImage
+        val unknownImage = odTaskData.unknownImage
 
-        val objectsDetectingData =
-            knownImage.otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME] as ObjectsDetectingData
-        val expectedResult = objectsDetectingData.objects[labelGroup]?.get(label)?.result!!
+        val expectedResult = knownImage.getOrCreateObjectsDetectionData().getOrCreateODData(labelGroup, label).result
+        val isKnownImageFirst = Random.nextBoolean()
 
-        val (knownImageSize, knownImageDisplayData) = getKnownImageInformation(knownImage)
+        val knownImageSize = getImageSize(knownImage.id)
 
         val description = Description("Mark all instances of $label with a rectangle.")
-        val taskData = ImagesWithBoundingBoxes(labelGroup, label, unknownImage.id, knownImageSize, expectedResult)
+        val taskData = ImagesWithBoundingBoxes(labelGroup, label, unknownImage.id, knownImageSize, expectedResult, isKnownImageFirst)
         val answerSheet = AnswerSheet(
-            ListDisplayData(listOf(knownImageDisplayData, toDisplayImage(objectService, unknownImage))),
+            ListDisplayData(listOf(
+                ImageDisplayData(objectService.getImageBase64StringById(knownImage.id)),
+                ImageDisplayData(objectService.getImageBase64StringById(unknownImage.id)))),
             AnswerType.MultipleBoundingBox
         )
 
         return Triple(description, taskData, answerSheet)
     }
 
-    private fun selectObjectDetectingTaskData(images: List<ObjectMetadata>): ObjectDetectingTaskData {
-        val knownImages = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
-        val unknownImages = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
+    private fun getImagesWithSameKnownAndUnknownLabel(user: String, config: ObjectDetectingGenerationConfig): ODTaskData {
+        val images =
+            objectMetadataService.getFiltered(user, config.tags, config.owners, ObjectTypeEnum.IMAGE)
+                .filter { it.containsObjectsDetectionData() }
 
-        val detectingImages = images.filter { it.otherMetadata.containsKey(ObjectDetectingConstants.TEMPLATE_DATA_NAME) }
-        for (objectMetadata in detectingImages.shuffled()) {
-            val objectsDetectingData =
-                objectMetadata.otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME]!! as ObjectsDetectingData
-            for ((labelGroup, labels) in objectsDetectingData.objects.entries.shuffled()) {
-                for ((label, objectLocalizationData) in labels.entries.shuffled()) {
-                    if (objectLocalizationData.isLocalized) {
-                        val unknownImage = unknownImages[labelGroup]?.get(label)
+        val imagesWithKnownLabels = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
+        val imagesWithUnknownLabels = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
+
+        for (metadata in images.shuffled()) {
+            val objectsDetectionData = metadata.getObjectsDetectionData()!!
+            for ((labelGroup, labels) in objectsDetectionData.objects.entries.shuffled()) {
+                for ((label, odData) in labels.entries.shuffled()) {
+                    if (odData.isDetected()) {
+                        val unknownImage = imagesWithUnknownLabels[labelGroup]?.get(label)
                         if (unknownImage != null) {
-                            return ObjectDetectingTaskData(labelGroup, label, objectMetadata, unknownImage)
+                            return ODTaskData(labelGroup, label, metadata, unknownImage)
                         }
-                        knownImages.putIfAbsent(labelGroup, mutableMapOf())
-                        knownImages[labelGroup]?.putIfAbsent(label, objectMetadata)
+                        imagesWithKnownLabels.getOrPut(labelGroup) { mutableMapOf() }.putIfAbsent(label, metadata)
                     } else {
-                        val knownImage = knownImages[labelGroup]?.get(label)
+                        val knownImage = imagesWithKnownLabels[labelGroup]?.get(label)
                         if (knownImage != null) {
-                            return ObjectDetectingTaskData(labelGroup, label, knownImage, objectMetadata)
+                            return ODTaskData(labelGroup, label, knownImage, metadata)
                         }
-                        unknownImages.putIfAbsent(labelGroup, mutableMapOf())
-                        unknownImages[labelGroup]?.putIfAbsent(label, objectMetadata)
+                        imagesWithUnknownLabels.getOrPut(labelGroup) { mutableMapOf() }.putIfAbsent(label, metadata)
                     }
                 }
             }
         }
         throw IllegalArgumentException("Images does not contain any label both detected and undetected.")
-    }
-
-    private fun getKnownImageInformation(knownImage: ObjectMetadata): Pair<ImageSize, ImageDisplayData> {
-        val imageId = knownImage.id
-        val format = (knownImage.objectType as ImageObjectType).format
-
-        val inputStream =
-            objectService.getObjectById(imageId)
-
-        val bytes = inputStream.readAllBytes()
-        val inputStreamCopy = ByteArrayInputStream(bytes)
-        val image = ImageUtils.getImageFromInputStream(inputStreamCopy)
-        val base64ImageString = toBase64Image(bytes, format)
-
-        inputStream.close()
-        inputStreamCopy.close()
-
-        return Pair(ImageSize(image.width, image.height), ImageDisplayData(base64ImageString))
     }
 
     override fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult {
@@ -252,18 +225,17 @@ class ObjectDetectingTemplate(
     ) {
         val imageMetadata = objectMetadataService.getById(imageId)
             ?: throw IllegalStateException("Metadata for file with id $imageId does not exist.")
-        val objectsDetectingData = (imageMetadata.otherMetadata[ObjectDetectingConstants.TEMPLATE_DATA_NAME]
+        val objectsDetectionData = (imageMetadata.otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME]
             ?: throw IllegalStateException("Image with id ${imageMetadata.id} does not contain data for object detecting task"))
-                as ObjectsDetectingData
-        val objectDetectingData = objectsDetectingData.objects[labelGroup]?.get(label) ?: throw IllegalStateException(
+                as ObjectsDetectionData
+        val objectDetectingData = objectsDetectionData.objects[labelGroup]?.get(label) ?: throw IllegalStateException(
             "Image with id ${imageMetadata.id} does not contain data for object detecting task for " +
                     "$label label from $labelGroup labelgroup."
         )
-        if (objectDetectingData.isLocalized) {
+        if (objectDetectingData.isDetected()) {
             if (objectDetectingData.result.isNotEmpty()) {
                 return
             }
-            objectDetectingData.isLocalized = false
         }
         objectDetectingData.answers.add(boxes)
         // if number of answers is lower than ANSWERS_NEEDED_FOR_EVALUATION, only record answer
@@ -281,14 +253,11 @@ class ObjectDetectingTemplate(
                 objectDetectingData.result.add(getAverageBoundingBox(cluster).toRelativeBoundingBox(imageSize))
             }
         }
-        objectDetectingData.isLocalized = true
         objectMetadataService.updateMetadata(imageMetadata)
     }
 
     private fun getImageSize(imageId: String): ImageSize {
-        val inputStream = objectService.getObjectById(imageId)
-        val image = ImageIO.read(inputStream) ?: throw IllegalStateException("Cannot read image with id $imageId")
-        inputStream.close()
+        val image = objectService.getImageById(imageId)
         return ImageSize(image.width, image.height)
     }
 
@@ -353,7 +322,7 @@ class ObjectDetectingTemplate(
     }
 }
 
-data class ObjectDetectingTaskData(
+data class ODTaskData(
     val labelGroup: String,
     val label: String,
     val knownImage: ObjectMetadata,

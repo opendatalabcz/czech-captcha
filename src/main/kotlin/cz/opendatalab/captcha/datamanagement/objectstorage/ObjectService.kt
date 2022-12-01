@@ -19,14 +19,22 @@ class ObjectService(
     ) {
 
     fun getObjectById(id: String): InputStream {
-        val metadata = objectCatalogue.findByIdOrNull(id)
-            ?: throw IllegalArgumentException("Object with id $id does not exist.")
+        return getObjectByStorageInfo(getInfoById(id))
+    }
 
-        return ObjectRepository.getFile(metadata.path, metadata.repositoryType)
+    private fun getObjectByStorageInfo(storageInfo: ObjectStorageInfo): InputStream {
+        return ObjectRepository.getFile(storageInfo.path, storageInfo.repositoryType)
     }
 
     fun getImageById(id: String): BufferedImage {
         return ImageUtils.getImageFromInputStream(getObjectById(id))
+    }
+
+    fun getImageBase64StringById(id: String): String {
+        val storageInfo = getInfoById(id)
+        val format = Utils.getFileExtension(storageInfo.originalName)
+        val bytes = Utils.getBytesFromInputStream(getObjectByStorageInfo(storageInfo))
+        return ImageUtils.getBase64StringWithImage(bytes, format)
     }
 
     fun getInfoById(id: String): ObjectStorageInfo {
@@ -42,7 +50,7 @@ class ObjectService(
         val id = generateUniqueId()
         val format = Utils.getFileExtension(originalName)
         val objectType = ObjectType.fromFormat(format)
-        val toSave = if (objectType.type == ObjectTypeEnum.IMAGE) ImageUtils.resizeInputStreamToMaxSize(
+        val toSave = if (objectType.type == ObjectTypeEnum.IMAGE) ImageUtils.resizeImageFromInputStreamToMaxSize(
             content,
             maxImageSize,
             format

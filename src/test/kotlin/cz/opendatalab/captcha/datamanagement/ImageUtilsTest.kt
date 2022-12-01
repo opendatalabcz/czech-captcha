@@ -77,7 +77,7 @@ internal class ImageUtilsTest {
 
     @Test
     fun resizeInputStreamToMaxSize_noResizeNeeded_successful() {
-        val resizedInputStream = ImageUtils.resizeInputStreamToMaxSize(getInputStream(), image.height, "jpg")
+        val resizedInputStream = ImageUtils.resizeImageFromInputStreamToMaxSize(getInputStream(), image.height, "jpg")
         val resized = resizedInputStream.use { ImageIO.read(it)!! }
         assertEquals(image.height, resized.height)
         assertEquals(image.width, resized.width)
@@ -85,7 +85,7 @@ internal class ImageUtilsTest {
 
     @Test
     fun resizeInputStreamToMaxSize_resizeNeeded_successful() {
-        val resizedInputStream = ImageUtils.resizeInputStreamToMaxSize(getInputStream(), image.height / 2, "jpg")
+        val resizedInputStream = ImageUtils.resizeImageFromInputStreamToMaxSize(getInputStream(), image.height / 2, "jpg")
         val resized = resizedInputStream.use { ImageIO.read(it)!! }
         assertEquals(image.height / 2, resized.height)
         assertEquals(image.width / 2, resized.width)

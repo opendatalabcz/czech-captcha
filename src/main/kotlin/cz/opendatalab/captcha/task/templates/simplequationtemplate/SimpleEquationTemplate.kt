@@ -10,7 +10,6 @@ import kotlin.random.Random
 @Component("NUMERIC_EQUATION")
 object SimpleEquationTemplate: TaskTemplate {
     override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
-        // todo generate equation...
         val firstDigit = generateDigit()
         val secondDigit = generateDigit()
         val description = Description("What is $firstDigit + $secondDigit?")

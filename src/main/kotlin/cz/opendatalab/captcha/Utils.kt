@@ -1,5 +1,8 @@
 package cz.opendatalab.captcha
 
+import org.apache.commons.io.IOUtils
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.util.*
 
 object Utils {
@@ -17,5 +20,12 @@ object Utils {
             return filename.substring(index + 1).lowercase(Locale.getDefault())
         }
         return ""
+    }
+
+    fun getBytesFromInputStream(inputStream: InputStream): ByteArray {
+        ByteArrayOutputStream().use { os ->
+            inputStream.use { inputStream -> IOUtils.copy(inputStream, os) }
+            return os.toByteArray()
+        }
     }
 }

@@ -7,7 +7,6 @@ import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.task.templates.GenerationConfig
 import cz.opendatalab.captcha.task.templates.ImageLabelingGenerationConfig
 import cz.opendatalab.captcha.task.templates.TaskTemplate
-import cz.opendatalab.captcha.task.templates.TemplateUtils
 import cz.opendatalab.captcha.verification.entities.*
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -73,7 +72,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
 
     fun toDisplayImages(images: List<Pair<ObjectMetadata, ExpectedResult>>): List<ImageDisplayData> {
         return images.map { (metadata, _) ->
-            TemplateUtils.toDisplayImage(objectService, metadata)
+            ImageDisplayData(objectService.getImageBase64StringById(metadata.id))
         }
     }
 

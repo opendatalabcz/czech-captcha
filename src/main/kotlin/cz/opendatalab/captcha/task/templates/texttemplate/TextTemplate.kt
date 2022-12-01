@@ -1,8 +1,8 @@
 package cz.opendatalab.captcha.task.templates.texttemplate
 
+import cz.opendatalab.captcha.datamanagement.ImageUtils
 import cz.opendatalab.captcha.task.templates.GenerationConfig
 import cz.opendatalab.captcha.task.templates.TaskTemplate
-import cz.opendatalab.captcha.task.templates.TemplateUtils.toBase64Image
 import cz.opendatalab.captcha.verification.entities.*
 import org.springframework.stereotype.Component
 import java.awt.*
@@ -59,7 +59,7 @@ object TextTemplate: TaskTemplate {
 
         val output = printImage(img).use { it.toByteArray() }
 
-        return toBase64Image(output, format)
+        return ImageUtils.getBase64StringWithImage(output, format)
     }
 
     private fun drawImage(text: String, img: BufferedImage, font: Font) {

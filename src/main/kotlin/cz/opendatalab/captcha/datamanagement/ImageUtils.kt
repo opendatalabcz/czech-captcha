@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.max
 
@@ -52,9 +53,14 @@ object ImageUtils {
         return outputImage
     }
 
-    fun resizeInputStreamToMaxSize(inputStream: InputStream, maxSize: Int, format: String): InputStream {
+    fun resizeImageFromInputStreamToMaxSize(inputStream: InputStream, maxSize: Int, format: String): InputStream {
         val image = getImageFromInputStream(inputStream)
         val resizedImage = Scalr.resize(image, maxSize)
         return getInputStreamFromImage(resizedImage, format)
+    }
+
+    fun getBase64StringWithImage(bytes: ByteArray, format: String): String {
+        val prefix = "data:image/$format;base64,"
+        return prefix + String(Base64.getEncoder().encode(bytes))
     }
 }

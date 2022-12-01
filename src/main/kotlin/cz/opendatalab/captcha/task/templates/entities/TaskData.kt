@@ -19,7 +19,8 @@ data class ImagesWithBoundingBoxes(
     val label: String,
     val unknownImageId: String,
     val knownImageSize: ImageSize,
-    val expectedResult: List<RelativeBoundingBox>
+    val expectedResult: List<RelativeBoundingBox>,
+    val isKnownImageFirst: Boolean
 ): TaskData
 
 data class ImageSize(val width: Int, val height: Int)

@@ -149,14 +149,14 @@ internal class ObjectServiceTest {
         val info = ObjectStorageInfo(uuid, originalFilename, filename, ObjectRepositoryType.FILESYSTEM)
 
         every { Utils.generateUniqueId() } returns uuid
-        every { ImageUtils.resizeInputStreamToMaxSize(content1, any(), format) } returns content2
+        every { ImageUtils.resizeImageFromInputStreamToMaxSize(content1, any(), format) } returns content2
         every { ObjectRepository.saveFile(content2, filename, ObjectRepositoryType.FILESYSTEM) } returns filename
         every { objectCatalogue.insert(info) } returns info
 
         assertEquals(info, objectService.saveFileObject(content1, originalFilename))
 
         verify { Utils.generateUniqueId() }
-        verify { ImageUtils.resizeInputStreamToMaxSize(content1, any(), format) }
+        verify { ImageUtils.resizeImageFromInputStreamToMaxSize(content1, any(), format) }
         verify { ObjectRepository.saveFile(content2, filename, ObjectRepositoryType.FILESYSTEM) }
         verify { objectCatalogue.insert(info) }
 
