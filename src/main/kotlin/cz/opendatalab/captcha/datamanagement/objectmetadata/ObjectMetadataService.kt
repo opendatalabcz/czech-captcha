@@ -10,6 +10,7 @@ import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectionServ
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -29,7 +30,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     }
 
     fun getById(objectId: String): ObjectMetadata? {
-        return objectMetadataRepo.findByObjectId(objectId)
+        return objectMetadataRepo.findByIdOrNull(objectId)
     }
 
     fun getLabelGroups(): List<LabelGroup> {
@@ -147,7 +148,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         )
         require(labelGroup.rangeContainsLabel(label))
 
-        val metadata = objectMetadataRepo.findByObjectId(objectId) ?: throw ResponseStatusException(
+        val metadata = objectMetadataRepo.findByIdOrNull(objectId) ?: throw ResponseStatusException(
             HttpStatus.BAD_REQUEST,
             "Object with fileId $objectId not found"
         )
@@ -250,11 +251,13 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
     private fun getOperationsToDoAndCheckTheirParameters(objectDetectionDTO: ObjectDetectionDTO): Pair<Boolean, Boolean> {
         var doObjectDetection = false
         var addAnnotations = false
-        if (objectDetectionDTO.objectDetectionParameters != null) {
+        val odParams = objectDetectionDTO.objectDetectionParameters
+        if (odParams != null && odParams.wantedLabels.isNotEmpty()) {
             checkODParameters(objectDetectionDTO.objectDetectionParameters)
             doObjectDetection = true
         }
-        if (objectDetectionDTO.annotations != null) {
+        val annotations = objectDetectionDTO.annotations
+        if (annotations != null && annotations.isNotEmpty()) {
             checkAnnotations(objectDetectionDTO.annotations)
             addAnnotations = true
         }

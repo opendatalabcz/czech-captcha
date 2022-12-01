@@ -69,7 +69,7 @@ data class ObjectMetadata(@Id val id: String,
 }
 
 enum class ObjectTypeEnum {
-    IMAGE, SOUND, TEXT_FILE
+    IMAGE, SOUND, TEXT
 }
 
 interface ObjectType {
@@ -87,17 +87,20 @@ interface ObjectType {
     }
 }
 
-data class ImageObjectType(override val format: String): ObjectType {
-    override val type = ObjectTypeEnum.IMAGE
-}
+data class ImageObjectType(
+    override val format: String,
+    override val type: ObjectTypeEnum = ObjectTypeEnum.IMAGE
+) : ObjectType {}
 
-data class SoundObjectType(override val format: String) : ObjectType {
-    override val type = ObjectTypeEnum.SOUND
-}
+data class SoundObjectType(
+    override val format: String,
+    override val type: ObjectTypeEnum = ObjectTypeEnum.SOUND
+) : ObjectType {}
 
-data class TextObjectType(override val format: String) : ObjectType {
-    override val type = ObjectTypeEnum.TEXT_FILE
-}
+data class TextObjectType(
+    override val format: String,
+    override val type: ObjectTypeEnum = ObjectTypeEnum.TEXT
+) : ObjectType {}
 
 interface OtherMetadataType
 

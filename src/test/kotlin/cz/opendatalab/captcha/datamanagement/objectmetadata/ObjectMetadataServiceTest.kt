@@ -190,7 +190,7 @@ internal class ObjectMetadataServiceTest {
                     url,
                     emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
-                        ObjectDetectionParametersDTO(emptyMap(), 1.2, 0.7),
+                        ObjectDetectionParametersDTO(mapOf(labelGroupName to labels), 1.2, 0.7),
                         null
                     )
                 ), user
@@ -206,7 +206,7 @@ internal class ObjectMetadataServiceTest {
                     url,
                     emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
-                        ObjectDetectionParametersDTO(emptyMap(), 1.2, -0.7),
+                        ObjectDetectionParametersDTO(mapOf(labelGroupName to labels), 1.2, -0.7),
                         null
                     )
                 ), user
@@ -222,7 +222,7 @@ internal class ObjectMetadataServiceTest {
                     url,
                     emptyObjectMetadataCreateDTO,
                     ObjectDetectionDTO(
-                        ObjectDetectionParametersDTO(emptyMap(), 0.8, 0.7),
+                        ObjectDetectionParametersDTO(mapOf(labelGroupName to labels), 0.8, 0.7),
                         null
                     )
                 ), user

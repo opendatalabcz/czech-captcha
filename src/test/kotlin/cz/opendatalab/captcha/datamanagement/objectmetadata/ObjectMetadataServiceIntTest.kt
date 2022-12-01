@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.web.server.ResponseStatusException
+import java.util.*
 
 
 @SpringBootTest
@@ -83,7 +84,7 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
         val expectedLabels = mutableMapOf(Pair(labelGroupName, expectedLabeling))
         val expected = metadata2.copy(labels = expectedLabels)
 
-        `when`(objectMetadataRepo.findByObjectId(objectId)).thenReturn(metadata2)
+        `when`(objectMetadataRepo.findById(objectId)).thenReturn(Optional.of(metadata2))
         `when`(labelRepo.findByName(labelGroupName)).thenReturn(labelGroup)
 
         objectMetadataService.labelObject(objectId, labelGroupName, label)
