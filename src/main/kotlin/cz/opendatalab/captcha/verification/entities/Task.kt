@@ -12,8 +12,3 @@ data class Task(
 
 @JvmInline
 value class Description(val text: String)
-
-//enum class TaskType {
-//    NUMERIC_EQUATION, SIMPLE_IMAGE, IMAGE_LABELING, TEXT
-//}
-

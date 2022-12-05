@@ -35,7 +35,7 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
     @Test
     fun generateTask() {
         val siteKey = "siteKey"
-        val taskConfig = TaskConfig("NUMERIC_EQUATION", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Equation", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, "secretKey", "user", "configName", taskConfig)
 
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
@@ -62,10 +62,10 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
         val siteKey = "siteKey"
         val expiration = Instant.now().plusSeconds(10)
         val taskData = TextData(correctAnswer)
-        val task = Task("TEXT", siteKey, expiration, Description("Type the text"), taskData)
+        val task = Task("Text", siteKey, expiration, Description("Type the text"), taskData)
 
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
 
@@ -85,10 +85,10 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
         val siteKey = "siteKey"
         val expiration = Instant.now().minusSeconds(10)
         val taskData = TextData(correctAnswer)
-        val task = Task("TEXT", siteKey, expiration, Description("Type the text"), taskData)
+        val task = Task("Text", siteKey, expiration, Description("Type the text"), taskData)
 
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
 
@@ -108,10 +108,10 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
         val siteKey = "siteKey"
         val expiration = Instant.now().plusSeconds(10)
         val taskData = TextData(correctAnswer)
-        val task = Task("TEXT", siteKey, expiration, Description("Type the text"), taskData)
+        val task = Task("Text", siteKey, expiration, Description("Type the text"), taskData)
 
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.2)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.2)
         val siteConfig = SiteConfig(siteKey, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
 
@@ -131,10 +131,10 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
         val siteKey = "siteKey"
         val expiration = Instant.now().plusSeconds(10)
         val taskData = TextData(correctAnswer)
-        val task = Task("TEXT", siteKey, expiration, Description("Type the text"), taskData)
+        val task = Task("Text", siteKey, expiration, Description("Type the text"), taskData)
 
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
 
@@ -152,7 +152,7 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
         val token = Token(Instant.now().plusSeconds(10), siteKey)
 
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySecretKey(secretKey)).thenReturn(siteConfig)
 
@@ -172,7 +172,7 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
 
         val siteKey2 = "siteKey"
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey2, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySiteKey(siteKey2)).thenReturn(siteConfig)
 
@@ -192,7 +192,7 @@ internal class VerificationOrchestrationServiceTest(@Autowired val verService: V
 
         val siteKey2 = "siteKey"
         val secretKey = "secretKey"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey2, secretKey, "user", "configName", taskConfig)
         `when`(siteConfigRepo.getBySiteKey(siteKey2)).thenReturn(siteConfig)
 

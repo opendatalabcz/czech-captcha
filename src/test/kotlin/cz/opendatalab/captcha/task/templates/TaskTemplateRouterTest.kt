@@ -25,7 +25,7 @@ internal class TaskTemplateRouterTest(@Autowired val router: TaskTemplateRouter,
 
     @Test
     fun `generate task positive`() {
-        val taskType = "NUMERIC_EQUATION"
+        val taskType = "Equation"
         val (description, data, answerSheet) = router.generateTask(taskType, "someUser", EmptyGenerationConfig)
 
         assertThat(description.text).startsWith("What is ")
@@ -44,7 +44,7 @@ internal class TaskTemplateRouterTest(@Autowired val router: TaskTemplateRouter,
 
     @Test
     fun evaluateTask() {
-        val taskType = "NUMERIC_EQUATION"
+        val taskType = "Equation"
         val (description, data, answerSheet) = router.generateTask(taskType, "someUser", EmptyGenerationConfig)
 
         assertThat(description.text).startsWith("What is ")

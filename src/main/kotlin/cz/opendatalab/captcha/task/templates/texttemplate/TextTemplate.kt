@@ -14,7 +14,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
-@Component("TEXT")
+@Component("Text")
 object TextTemplate: TaskTemplate {
     override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         val description = Description("Type the text")

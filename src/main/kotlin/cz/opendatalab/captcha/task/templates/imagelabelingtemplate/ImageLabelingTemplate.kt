@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import kotlin.random.Random
 
-@Service("IMAGE_LABELING")
+@Service("Image Labeling")
 class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
                             val objectService: ObjectService
 ): TaskTemplate {

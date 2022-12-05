@@ -1,6 +1,5 @@
 package cz.opendatalab.captcha.siteconfig
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupRepository
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataRepository
@@ -32,7 +31,7 @@ internal class SiteConfigServiceTest(@Autowired val siteConfigService: SiteConfi
     @Test
     fun getSiteConfigsForUser() {
         val user = "user"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val configs = listOf(SiteConfig("site1", "sec2", user, "config1", taskConfig),
             SiteConfig("site1", "sec2", user, "config1", taskConfig))
 
@@ -48,7 +47,7 @@ internal class SiteConfigServiceTest(@Autowired val siteConfigService: SiteConfi
         val secretKey = "secret"
         val siteKey = "site1"
         val user = "user"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, secretKey, user, "config1", taskConfig)
 
         `when`(siteConfigRepo.getBySecretKey(secretKey)).thenReturn(siteConfig)
@@ -64,7 +63,7 @@ internal class SiteConfigServiceTest(@Autowired val siteConfigService: SiteConfi
         val siteKey = "site1"
         val user = "user"
         val configName = "configName"
-        val taskType = "TEXT"
+        val taskType = "Text"
         val evaluationThreshold = 1.0
         val taskConfigDTO = TaskConfigDTO(taskType, objectMapper.createObjectNode(), evaluationThreshold)
         // expected
@@ -82,7 +81,7 @@ internal class SiteConfigServiceTest(@Autowired val siteConfigService: SiteConfi
     fun deleteConfig() {
         val siteKey = "site1"
         val user = "user"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, "sec1", user, "config1", taskConfig)
 
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)
@@ -97,7 +96,7 @@ internal class SiteConfigServiceTest(@Autowired val siteConfigService: SiteConfi
         val siteKey = "site1"
         val user = "user"
         val otherUser = "otheruser"
-        val taskConfig = TaskConfig("TEXT", EmptyGenerationConfig, 1.0)
+        val taskConfig = TaskConfig("Text", EmptyGenerationConfig, 1.0)
         val siteConfig = SiteConfig(siteKey, "sec1", otherUser, "config1", taskConfig)
 
         `when`(siteConfigRepo.getBySiteKey(siteKey)).thenReturn(siteConfig)

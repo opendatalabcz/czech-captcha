@@ -7,7 +7,7 @@ import cz.opendatalab.captcha.task.templates.TaskTemplate
 import org.springframework.stereotype.Component
 import kotlin.random.Random
 
-@Component("NUMERIC_EQUATION")
+@Component("Equation")
 object SimpleEquationTemplate: TaskTemplate {
     override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         val firstDigit = generateDigit()

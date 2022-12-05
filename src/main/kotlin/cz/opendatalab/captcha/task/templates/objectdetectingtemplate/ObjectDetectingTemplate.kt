@@ -14,7 +14,7 @@ import kotlin.math.min
 import kotlin.random.Random
 
 
-@Service("OBJECT_DETECTING")
+@Service("Object Detection")
 class ObjectDetectingTemplate(
     val objectMetadataService: ObjectMetadataService,
     val objectService: ObjectService
