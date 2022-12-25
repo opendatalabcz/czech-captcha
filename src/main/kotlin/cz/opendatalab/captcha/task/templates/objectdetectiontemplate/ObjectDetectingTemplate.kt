@@ -82,8 +82,6 @@ class ObjectDetectingTemplate(
         val objectDetectingAnswer = answer as BoundingBoxesAnswer
         val data = taskData as ImagesWithBoundingBoxes
 
-        verifyBoundingBoxesInImage(answer)
-
         val verificationResult = evaluateAnswer(objectDetectingAnswer.known, data.expectedResult, data.knownImageSize)
 
         if (verificationResult > ADD_DETECTION_DATA_THRESHOLD) {
@@ -96,25 +94,6 @@ class ObjectDetectingTemplate(
         }
 
         return EvaluationResult(verificationResult)
-    }
-
-    private fun verifyBoundingBoxesInImage(answer: BoundingBoxesAnswer) {
-        for (box in answer.known) {
-            verifyBoundingBoxInImage(box)
-        }
-        for (box in answer.unknown) {
-            verifyBoundingBoxInImage(box)
-        }
-    }
-
-    private fun verifyBoundingBoxInImage(box: RelativeBoundingBox) {
-        if (!box.isInImage()) {
-            throw IllegalArgumentException(
-                "Bounding box " +
-                        "(x: ${box.x}, y: ${box.y}, w: ${box.width}, h: ${box.height})" +
-                        " is not completely in the image."
-            )
-        }
     }
 
     private fun evaluateAnswer(
@@ -269,15 +248,15 @@ class ObjectDetectingTemplate(
                 // iterate over individual boxes in two different rows (answers)
                 for ((x1, box1) in allBoxes[y1].withIndex()) {
                     for ((x2, box2) in allBoxes[y2].withIndex()) {
-                        val iou = calculateIoU(box1, box2)
-                        if (iou > SIMILARITY_THRESHOLD) { // do not include pairs that are not very similar
-                            distances.add(Distance(iou, Pair(x1, y1), Pair(x2, y2)))
+                        val distance = 1 - calculateIoU(box1, box2)
+                        if (distance < similarityThreshold) { // do not include pairs that are not very similar
+                            distances.add(Distance(distance, Pair(x1, y1), Pair(x2, y2)))
                         }
                     }
                 }
             }
         }
-        distances.sortByDescending { it.iou }
+        distances.sortBy { it.distance }
         return distances
     }
 
@@ -329,4 +308,4 @@ data class ODTaskData(
     val unknownImage: ObjectMetadata
 )
 
-data class Distance(val iou: Double, val b1: Pair<Int, Int>, val b2: Pair<Int, Int>)
+data class Distance(val distance: Double, val b1: Pair<Int, Int>, val b2: Pair<Int, Int>)

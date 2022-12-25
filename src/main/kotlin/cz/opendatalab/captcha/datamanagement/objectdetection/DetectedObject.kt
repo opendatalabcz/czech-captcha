@@ -25,13 +25,6 @@ data class RelativeBoundingBox(val x: Double, val y: Double, val width: Double, 
         }
     }
 
-    fun isInImage(): Boolean {
-        if (x < 0.0 || y < 0.0 || x + width > 1.0 || y + height > 1.0) {
-            return false
-        }
-        return true
-    }
-
     fun calculateArea(): Double {
         return width * height
     }
