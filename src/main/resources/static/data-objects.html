@@ -60,8 +60,8 @@
             <tr class="uploading-object" v-if="obj.isUploading">
                 <td><i class="fa-spinner fa-spin fas"></i> Uploading</td>
                 <td>{{ obj.id }}</td>
-                <td>{{ obj.objectType }}</td>
-                <td colspan="2">{{ obj.sourceType }}</td>
+                <td>{{ obj.objectType.toLowerCase() }}</td>
+                <td colspan="2">{{ obj.sourceType.toLowerCase() }}</td>
             </tr>
         </template>
         <template v-for="(object, index) in existingObjects">
