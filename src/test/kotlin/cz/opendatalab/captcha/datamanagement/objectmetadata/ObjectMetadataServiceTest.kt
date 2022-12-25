@@ -72,8 +72,7 @@ internal class ObjectMetadataServiceTest {
         )
     )
     private val childLabeling = Labeling(LabelStatistics(mutableMapOf(
-        odLabel1 to LabelStatistic(1, 1),
-        odLabel2 to LabelStatistic(-1, 1))
+        odLabel1 to LabelStatistic(1, 1))
     ))
     private val childMetadata = ObjectMetadata(
         childUuid, user, jpg, tags,
@@ -399,7 +398,6 @@ internal class ObjectMetadataServiceTest {
         verify { objectMetadataRepo.insert(parentMetadataCopy) }
         verify { objectService.saveFileObject(any(), childOriginalName) }
         verify { objectDetectionService.detectObjectsWithOverlaps(any<BufferedImage>(), odWantedLabels) }
-        verify { objectDetectionService.getSupportedLabels() }
         verify { objectMetadataRepo.insert(childMetadata) }
         verify { objectMetadataRepo.save(parentMetadataWithChild) }
     }

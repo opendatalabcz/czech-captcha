@@ -376,9 +376,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         twoVotes: Double
     ): Labeling {
         val labelStatistics = LabelStatistics()
-        for (label in objectDetectionService.getSupportedLabels()) {
-            val probability =
-                obj.labelsWithProbability[label] ?: -1.0 // if object was not detected, it probably is not present
+        for ((label, probability) in obj.labelsWithProbability.entries) {
             val votes = calculateVotesFromProbability(probability, twoVotes, oneVote)
             labelStatistics.statistics[label] = LabelStatistic(votes, abs(votes))
         }
