@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit
 
 @Service
 class VerificationOrchestrationService(private val siteConfigService: SiteConfigService,
-                                       private val config: VerificationConfig,
+                                       private val config: VerificationProperties,
                                        private val taskTemplateRouter: TaskTemplateRouter,
                                        private val taskRepository: KeyValueStore<Task>,
                                        private val tokenRepository: KeyValueStore<Token>

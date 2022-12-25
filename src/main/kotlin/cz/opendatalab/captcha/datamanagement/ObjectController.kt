@@ -4,7 +4,7 @@ import cz.opendatalab.captcha.datamanagement.dto.*
 import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroup
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadata
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataService
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
+import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfoRepository
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfo
 import io.swagger.v3.oas.annotations.Parameter
@@ -87,7 +87,7 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
 @RestController
 @RequestMapping("api/admin/datamanagement/objects")
 class ObjectAdminController(val metadataService: ObjectMetadataService,
-                            val objectCatalogue: ObjectCatalogue) {
+                            val objectStorageInfoRepository: ObjectStorageInfoRepository) {
     @GetMapping("metadata")
     fun getObjectMetadata(): List<ObjectMetadata> {
         return metadataService.getAll()
@@ -95,17 +95,17 @@ class ObjectAdminController(val metadataService: ObjectMetadataService,
 
     @GetMapping("storageinfo/{objectId}")
     fun getObjectInfo(@PathVariable objectId: String): ObjectStorageInfo {
-        return objectCatalogue.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found")
+        return objectStorageInfoRepository.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found")
     }
 
     @GetMapping("storageinfo")
     fun getObjectInfoList(): List<ObjectStorageInfo> {
-        return objectCatalogue.findAll()
+        return objectStorageInfoRepository.findAll()
     }
 
     @GetMapping("{objectId}")
     fun getObject(@PathVariable objectId: String): ObjectDTO {
-        val objectInfo = objectCatalogue.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found in catalogue")
+        val objectInfo = objectStorageInfoRepository.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found in catalogue")
         val metadata = metadataService.getById(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Metadata for object with id $objectId not found")
         return ObjectDTO(objectInfo, metadata)
     }

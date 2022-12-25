@@ -14,7 +14,8 @@ import java.io.InputStream
 
 @Service
 class ObjectService(
-    private val objectCatalogue: ObjectCatalogue,
+    private val objectStorageInfoRepository: ObjectStorageInfoRepository,
+    private val objectRepository: ObjectRepository,
     @Value("\${datamanagement.image.max-size}") private var maxImageSize: Int
     ) {
 
@@ -23,7 +24,7 @@ class ObjectService(
     }
 
     private fun getObjectByStorageInfo(storageInfo: ObjectStorageInfo): InputStream {
-        return ObjectRepository.getFile(storageInfo.path, storageInfo.repositoryType)
+        return objectRepository.getFile(storageInfo.path, storageInfo.repositoryType)
     }
 
     fun getImageById(id: String): BufferedImage {
@@ -38,12 +39,12 @@ class ObjectService(
     }
 
     fun getInfoById(id: String): ObjectStorageInfo {
-        return objectCatalogue.findByIdOrNull(id)
+        return objectStorageInfoRepository.findByIdOrNull(id)
             ?: throw IllegalArgumentException("Object with id $id does not exist.")
     }
 
     fun getInfoByIdList(ids: Iterable<String>): List<ObjectStorageInfo> {
-        return objectCatalogue.findAllById(ids).toList()
+        return objectStorageInfoRepository.findAllById(ids).toList()
     }
 
     fun saveFileObject(content: InputStream, originalName: String): ObjectStorageInfo {
@@ -56,10 +57,10 @@ class ObjectService(
             format
         ) else content
 
-        val path = ObjectRepository.saveFile(toSave, "$id.$format", ObjectRepositoryType.FILESYSTEM)
+        val path = objectRepository.saveFile(toSave, "$id.$format", ObjectRepositoryType.FILESYSTEM)
 
         val toBeAdded = ObjectStorageInfo(id, originalName, path, ObjectRepositoryType.FILESYSTEM)
-        objectCatalogue.insert(toBeAdded)
+        objectStorageInfoRepository.insert(toBeAdded)
 
         return toBeAdded
     }
@@ -67,15 +68,15 @@ class ObjectService(
     fun saveUrlObject(url: String): ObjectStorageInfo {
         val filename = getFilenameFromUrl(url)
         val toBeAdded = ObjectStorageInfo(generateUniqueId(), filename, url, ObjectRepositoryType.URL)
-        objectCatalogue.insert(toBeAdded)
+        objectStorageInfoRepository.insert(toBeAdded)
         return toBeAdded
     }
 
     fun deleteObject(id: String) {
-        val metadata = objectCatalogue.findByIdOrNull(id)
+        val metadata = objectStorageInfoRepository.findByIdOrNull(id)
         metadata?.also {
-            ObjectRepository.removeFile(it.path, it.repositoryType)
-            objectCatalogue.deleteById(id)
+            objectRepository.removeFile(it.path, it.repositoryType)
+            objectStorageInfoRepository.deleteById(id)
         }
     }
 

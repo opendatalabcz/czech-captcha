@@ -14,8 +14,10 @@ import org.springframework.web.server.ResponseStatusException
 import kotlin.random.Random
 
 @Service("Image Labeling")
-class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
-                            val objectService: ObjectService
+class ImageLabelingTemplate(
+    val objectMetadataService: ObjectMetadataService,
+    val objectService: ObjectService,
+    val properties: ImageLabelingTemplateProperties
 ): TaskTemplate {
     override fun generateTask(generationConfig: GenerationConfig, currentUser: String): Triple<Description, TaskData, AnswerSheet> {
         val config = generationConfig as ImageLabelingGenerationConfig
@@ -42,7 +44,7 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
 
         val verificationResult = evaluateAnswer(imageLabelingAnswer, data.expectedResults)
 
-        if (verificationResult > 0.95) {
+        if (verificationResult > properties.labelUnknownThreshold) {
             labelUnknown(data.expectedResults, data.label, data.labelGroup, imageLabelingAnswer)
         }
 
@@ -50,9 +52,9 @@ class ImageLabelingTemplate(val objectMetadataService: ObjectMetadataService,
     }
 
     private fun selectImages(objects: List<ObjectMetadata>, labelGroupName: String, label: String): List<Pair<ObjectMetadata, ExpectedResult>> {
-        val totalImagesCount = 12
-        val unknownLabelCount = 2
-        val minWithLabel = 2
+        val totalImagesCount = properties.totalImagesCount
+        val unknownLabelCount = properties.unknownLabelCount
+        val minWithLabel = properties.minWithLabel
         val withLabelCount = Random.nextInt(minWithLabel, totalImagesCount - unknownLabelCount - minWithLabel + 1)
         val withoutLabelCount = totalImagesCount - unknownLabelCount - withLabelCount
 

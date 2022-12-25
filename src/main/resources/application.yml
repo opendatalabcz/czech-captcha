@@ -1,0 +1,39 @@
+verification:
+  token:
+    expiration: 3
+  task:
+    expiration: 3
+
+datamanagement:
+  filesystem:
+    data-path: C:\\ProgramData\\czech-captcha\\saved-files
+    max-files-per-dir: 10000
+  image:
+    max-size: 1024
+  objectdetection:
+    cache-path: C:\\ProgramData\\czech-captcha\\od-cache
+
+task:
+  templates:
+    image-labeling-template:
+      labelUnknownThreshold: 0.95
+      totalImagesCount: 12
+      unknownLabelCount: 2
+      minWithLabel: 2
+    object-detection-template:
+      answersNeededForFinalPosition: 11
+      addDetectionDataThreshold: 0.6
+      similarityThreshold: 0.8
+
+server:
+  error:
+    include-message: always
+
+spring:
+  data:
+    mongodb:
+      database: captcha
+      authentication-database: admin
+
+mongock:
+  migration-scan-package: cz.opendatalab.captcha.initialization.mongock

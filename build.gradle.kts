@@ -27,7 +27,6 @@ dependencies {
 	implementation("io.mongock:mongock:5.0.32")
 	implementation("io.mongock:mongock-springboot:5.0.32")
 	implementation("io.mongock:mongodb-springdata-v3-driver:5.0.32")
-	implementation("commons-configuration:commons-configuration:1.7")
 	implementation("org.springframework:spring-test:5.3.15")
 	implementation("commons-io:commons-io:2.11.0")
 

@@ -1,4 +1,4 @@
-package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
+package cz.opendatalab.captcha.task.templates.objectdetectiontemplate
 
 import cz.opendatalab.captcha.TestImages
 import cz.opendatalab.captcha.datamanagement.ImageUtils
@@ -15,11 +15,15 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class ObjectDetectingTemplateTest {
+internal class ObjectDetectionTemplateTest {
     private val objectService: ObjectService = mockk()
     private val objectMetadataService: ObjectMetadataService = mockk()
 
-    private val objectDetectingTemplate = ObjectDetectingTemplate(objectMetadataService, objectService)
+    private val objectDetectionTemplate = ObjectDetectionTemplate(
+        objectMetadataService,
+        objectService,
+        ObjectDetectionTemplateProperties(11, 0.6, 0.8)
+    )
 
     private val user = "user"
     private val labelgroup = "labelgroup"
@@ -142,7 +146,7 @@ internal class ObjectDetectingTemplateTest {
 
     @Test
     fun generateTaskTestSuccessful() {
-        val (description, taskData, answerSheet) = objectDetectingTemplate.generateTask(config, user)
+        val (description, taskData, answerSheet) = objectDetectionTemplate.generateTask(config, user)
 
         // assert description
         assertEquals(description.text, "Mark all instances of $label with a rectangle.")
@@ -192,17 +196,17 @@ internal class ObjectDetectingTemplateTest {
         )
 
         assertThrows(IllegalArgumentException::class.java) {
-            objectDetectingTemplate.generateTask(config, user)
+            objectDetectionTemplate.generateTask(config, user)
         }
     }
 
     @Test
     fun evaluateTaskWithoutSufficientScoreToRecordAnswer() {
-        val (_, taskData, _) = objectDetectingTemplate.generateTask(config, user)
+        val (_, taskData, _) = objectDetectionTemplate.generateTask(config, user)
 
         val answer = BoundingBoxesAnswer(listOf(), listOf())
 
-        val result = objectDetectingTemplate.evaluateTask(taskData, answer)
+        val result = objectDetectionTemplate.evaluateTask(taskData, answer)
 
         assertEquals(0.0, result.evaluation)
 
@@ -230,7 +234,7 @@ internal class ObjectDetectingTemplateTest {
         every { objectMetadataService.getById(id3) } returns metadataCopy[2]
         every { objectMetadataService.updateMetadata(any()) } returns metadataCopy[2]
 
-        val (_, taskData, _) = objectDetectingTemplate.generateTask(config, user)
+        val (_, taskData, _) = objectDetectionTemplate.generateTask(config, user)
 
         val answer = BoundingBoxesAnswer(
             listOf(
@@ -242,7 +246,7 @@ internal class ObjectDetectingTemplateTest {
             )
         )
 
-        val result = objectDetectingTemplate.evaluateTask(taskData, answer)
+        val result = objectDetectionTemplate.evaluateTask(taskData, answer)
 
         assertEquals(1.0, result.evaluation)
         assertFalse(objectsDetectionData.isDetected())
@@ -262,7 +266,7 @@ internal class ObjectDetectingTemplateTest {
                 label
             )!!
 
-        val (_, taskData, _) = objectDetectingTemplate.generateTask(config, user)
+        val (_, taskData, _) = objectDetectionTemplate.generateTask(config, user)
 
         val answer = BoundingBoxesAnswer(
             listOf(
@@ -275,7 +279,7 @@ internal class ObjectDetectingTemplateTest {
             )
         )
 
-        val result = objectDetectingTemplate.evaluateTask(taskData, answer)
+        val result = objectDetectionTemplate.evaluateTask(taskData, answer)
 
         assertEquals(0.8986787711761368, result.evaluation)
         assertTrue(objectsDetectionData.isDetected())

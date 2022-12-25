@@ -13,8 +13,9 @@ import java.io.InputStream
 internal class ObjectServiceTest {
 
     private val maxSize = 1024
-    private val objectCatalogue: ObjectCatalogue = mockk()
-    private val objectService = ObjectService(objectCatalogue, maxSize)
+    private val objectStorageInfoRepository: ObjectStorageInfoRepository = mockk()
+    private val objectRepository: ObjectRepository = mockk()
+    private val objectService = ObjectService(objectStorageInfoRepository, objectRepository, maxSize)
 
     private val url = "http://some.website.com/hmg-prod.s3.amazonaws.com/images/image-for-service.test.jpg?crop=1.00xw:0.669xh;0,0.190xh&resize=640:*"
     private val uuid = "123e4567-e89b-12d3-a456-426614174000"
@@ -22,7 +23,6 @@ internal class ObjectServiceTest {
 
     @BeforeEach
     fun mockObjects() {
-        mockkObject(ObjectRepository)
         mockkObject(Utils)
         mockkObject(ImageUtils)
     }
@@ -40,40 +40,40 @@ internal class ObjectServiceTest {
     fun getObjectById_validId_successful() {
         val content = getInputStream()
 
-        every { objectCatalogue.findByIdOrNull(uuid) } returns objectStorageInfoUrl
-        every { ObjectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) } returns
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns objectStorageInfoUrl
+        every { objectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) } returns
                 content
 
         assertEquals(content, objectService.getObjectById(uuid))
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
-        verify { ObjectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
+        verify { objectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) }
 
         content.close()
     }
 
     @Test
     fun getObjectById_wrongId_shouldThrow() {
-        every { objectCatalogue.findByIdOrNull(uuid) } returns null
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns null
 
         assertThrows(IllegalArgumentException::class.java) { objectService.getObjectById(uuid) }
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
     }
 
     @Test
     fun getImageById_validImage_successful() {
         val content = getInputStream()
 
-        every { objectCatalogue.findByIdOrNull(uuid) } returns objectStorageInfoUrl
-        every { ObjectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) } returns
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns objectStorageInfoUrl
+        every { objectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) } returns
                 content
         every { ImageUtils.getImageFromInputStream(content) } returns TestImages.IMAGE_1
 
         assertEquals(TestImages.IMAGE_1, objectService.getImageById(uuid))
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
-        verify { ObjectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
+        verify { objectRepository.getFile(objectStorageInfoUrl.path, objectStorageInfoUrl.repositoryType) }
         verify { ImageUtils.getImageFromInputStream(content) }
 
         content.close()
@@ -81,41 +81,41 @@ internal class ObjectServiceTest {
 
     @Test
     fun getInfoById_validId_successful() {
-        every { objectCatalogue.findByIdOrNull(uuid) } returns objectStorageInfoUrl
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns objectStorageInfoUrl
 
         assertEquals(objectStorageInfoUrl, objectService.getInfoById(uuid))
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
     }
 
     @Test
     fun getInfoById_wrongId_shouldThrow() {
-        every { objectCatalogue.findByIdOrNull(uuid) } returns null
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns null
 
         assertThrows(IllegalArgumentException::class.java) { objectService.getInfoById(uuid) }
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
     }
 
     @Test
     fun getInfoByIdList() {
         val ids = listOf("id1", "id2")
-        every { objectCatalogue.findAllById(ids) } returns emptyList()
+        every { objectStorageInfoRepository.findAllById(ids) } returns emptyList()
 
         assertEquals(0, objectService.getInfoByIdList(ids).size)
 
-        verify { objectCatalogue.findAllById(ids) }
+        verify { objectStorageInfoRepository.findAllById(ids) }
     }
 
     @Test
     fun saveUrlObject() {
-        every { objectCatalogue.insert(objectStorageInfoUrl) } returns objectStorageInfoUrl
+        every { objectStorageInfoRepository.insert(objectStorageInfoUrl) } returns objectStorageInfoUrl
         every { Utils.generateUniqueId() } returns uuid
 
         assertEquals(objectStorageInfoUrl, objectService.saveUrlObject(url))
 
         verify { Utils.generateUniqueId() }
-        verify { objectCatalogue.insert(objectStorageInfoUrl) }
+        verify { objectStorageInfoRepository.insert(objectStorageInfoUrl) }
     }
 
     @Test
@@ -127,14 +127,14 @@ internal class ObjectServiceTest {
         val info = ObjectStorageInfo(uuid, originalFilename, filename, ObjectRepositoryType.FILESYSTEM)
 
         every { Utils.generateUniqueId() } returns uuid
-        every { ObjectRepository.saveFile(content, filename, ObjectRepositoryType.FILESYSTEM) } returns filename
-        every { objectCatalogue.insert(info) } returns info
+        every { objectRepository.saveFile(content, filename, ObjectRepositoryType.FILESYSTEM) } returns filename
+        every { objectStorageInfoRepository.insert(info) } returns info
 
         assertEquals(info, objectService.saveFileObject(content, originalFilename))
 
         verify { Utils.generateUniqueId() }
-        verify { ObjectRepository.saveFile(content, filename, ObjectRepositoryType.FILESYSTEM) }
-        verify { objectCatalogue.insert(info) }
+        verify { objectRepository.saveFile(content, filename, ObjectRepositoryType.FILESYSTEM) }
+        verify { objectStorageInfoRepository.insert(info) }
 
         content.close()
     }
@@ -150,15 +150,15 @@ internal class ObjectServiceTest {
 
         every { Utils.generateUniqueId() } returns uuid
         every { ImageUtils.resizeImageFromInputStreamToMaxSize(content1, any(), format) } returns content2
-        every { ObjectRepository.saveFile(content2, filename, ObjectRepositoryType.FILESYSTEM) } returns filename
-        every { objectCatalogue.insert(info) } returns info
+        every { objectRepository.saveFile(content2, filename, ObjectRepositoryType.FILESYSTEM) } returns filename
+        every { objectStorageInfoRepository.insert(info) } returns info
 
         assertEquals(info, objectService.saveFileObject(content1, originalFilename))
 
         verify { Utils.generateUniqueId() }
         verify { ImageUtils.resizeImageFromInputStreamToMaxSize(content1, any(), format) }
-        verify { ObjectRepository.saveFile(content2, filename, ObjectRepositoryType.FILESYSTEM) }
-        verify { objectCatalogue.insert(info) }
+        verify { objectRepository.saveFile(content2, filename, ObjectRepositoryType.FILESYSTEM) }
+        verify { objectStorageInfoRepository.insert(info) }
 
         content1.close()
         content2.close()
@@ -166,24 +166,25 @@ internal class ObjectServiceTest {
 
     @Test
     fun deleteObject_withExistingObject_shouldDeleteItInObjectRepository() {
-        every { objectCatalogue.findByIdOrNull(uuid) } returns objectStorageInfoUrl
-        every { objectCatalogue.deleteById(uuid) } returns Unit
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns objectStorageInfoUrl
+        every { objectRepository.removeFile(url, ObjectRepositoryType.URL) } returns Unit
+        every { objectStorageInfoRepository.deleteById(uuid) } returns Unit
 
         objectService.deleteObject(uuid)
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
-        verify { ObjectRepository.removeFile(url, ObjectRepositoryType.URL) }
-        verify { objectCatalogue.deleteById(uuid) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
+        verify { objectRepository.removeFile(url, ObjectRepositoryType.URL) }
+        verify { objectStorageInfoRepository.deleteById(uuid) }
     }
 
     @Test
     fun deleteObject_withNonExistingObject_shouldDoNothing() {
-        every { objectCatalogue.findByIdOrNull(uuid) } returns null
+        every { objectStorageInfoRepository.findByIdOrNull(uuid) } returns null
 
         objectService.deleteObject(uuid)
 
-        verify { objectCatalogue.findByIdOrNull(uuid) }
-        verify(exactly = 0) { ObjectRepository.removeFile(any(), any()) }
-        verify(exactly = 0) { objectCatalogue.deleteById(any()) }
+        verify { objectStorageInfoRepository.findByIdOrNull(uuid) }
+        verify(exactly = 0) { objectRepository.removeFile(any(), any()) }
+        verify(exactly = 0) { objectStorageInfoRepository.deleteById(any()) }
     }
 }

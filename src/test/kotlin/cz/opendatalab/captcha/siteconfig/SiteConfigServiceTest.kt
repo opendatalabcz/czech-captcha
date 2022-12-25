@@ -1,12 +1,7 @@
 package cz.opendatalab.captcha.siteconfig
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupRepository
-import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataRepository
-import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectCatalogue
-import cz.opendatalab.captcha.task.taskconfig.TaskConfigService
 import cz.opendatalab.captcha.task.templates.EmptyGenerationConfig
-import cz.opendatalab.captcha.user.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -15,18 +10,16 @@ import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.server.ResponseStatusException
 
 @SpringBootTest
-internal class SiteConfigServiceTest(@Autowired val siteConfigService: SiteConfigService,
-                                     @MockBean @Autowired val siteConfigRepo: SiteConfigRepository,
-                                     @Autowired val taskConfigService: TaskConfigService,
-                                     @Autowired val objectMapper: ObjectMapper,
-                                    @Autowired @MockBean val userRepository: UserRepository,
-                                    @Autowired @MockBean val catalog: ObjectCatalogue,
-                                    @Autowired @MockBean val objectMetadataRepo: ObjectMetadataRepository,
-                                    @Autowired @MockBean val labelGroupRepo: LabelGroupRepository
-                                     ) {
+@ActiveProfiles("test")
+internal class SiteConfigServiceTest(
+    @Autowired val siteConfigService: SiteConfigService,
+    @MockBean @Autowired val siteConfigRepo: SiteConfigRepository,
+    @Autowired val objectMapper: ObjectMapper
+    ) {
 
     @Test
     fun getSiteConfigsForUser() {

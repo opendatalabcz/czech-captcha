@@ -16,5 +16,5 @@ data class ObjectStorageInfo(
 
 
 enum class ObjectRepositoryType {
-    OBJECT_STORAGE, FILESYSTEM, URL
+    FILESYSTEM, URL
 }

@@ -13,7 +13,7 @@ import java.io.File
 
 @Component
 class ObjectDetectorKotlinDL(
-    @Value("\${objectdetection.cache}") private val cacheDir: String
+    @Value("\${datamanagement.objectdetection.cache-path}") private val cacheDir: String
 ): ObjectDetector {
 
     private val modelHub = ONNXModelHub(File(cacheDir))

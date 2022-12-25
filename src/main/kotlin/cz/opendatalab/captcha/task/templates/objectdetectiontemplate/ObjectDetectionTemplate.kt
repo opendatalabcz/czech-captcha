@@ -1,4 +1,4 @@
-package cz.opendatalab.captcha.task.templates.objectdetectingtemplate
+package cz.opendatalab.captcha.task.templates.objectdetectiontemplate
 
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
@@ -15,9 +15,10 @@ import kotlin.random.Random
 
 
 @Service("Object Detection")
-class ObjectDetectingTemplate(
+class ObjectDetectionTemplate(
     val objectMetadataService: ObjectMetadataService,
-    val objectService: ObjectService
+    val objectService: ObjectService,
+    val properties: ObjectDetectionTemplateProperties
 ) : TaskTemplate {
     override fun generateTask(
         generationConfig: GenerationConfig,
@@ -84,7 +85,7 @@ class ObjectDetectingTemplate(
 
         val verificationResult = evaluateAnswer(objectDetectingAnswer.known, data.expectedResult, data.knownImageSize)
 
-        if (verificationResult > ADD_DETECTION_DATA_THRESHOLD) {
+        if (verificationResult > properties.addDetectionDataThreshold) {
             addDetectionDataToUnknownImage(
                 data.unknownImageId,
                 data.label,
@@ -217,8 +218,7 @@ class ObjectDetectingTemplate(
             }
         }
         objectDetectingData.answers.add(boxes)
-        // if number of answers is lower than ANSWERS_NEEDED_FOR_EVALUATION, only record answer
-        if (objectDetectingData.answers.size < ANSWERS_NEEDED_FOR_EVALUATION) {
+        if (objectDetectingData.answers.size < properties.answersNeededForFinalPosition) {
             objectMetadataService.updateMetadata(imageMetadata)
             return
         }
@@ -227,8 +227,7 @@ class ObjectDetectingTemplate(
             objectDetectingData.answers.map { answer -> answer.map { box -> box.toAbsoluteBoundingBox(imageSize) } }
         val clusters = createClusters(absoluteAnswers)
         for (cluster in clusters) {
-            // if cluster has more than ANSWERS_NEEDED_FOR_EVALUATION/2 bounding boxes, make average of them and record it as a result
-            if (cluster.size > ANSWERS_NEEDED_FOR_EVALUATION / 2) {
+            if (cluster.size > properties.answersNeededForFinalPosition / 2) {
                 objectDetectingData.result.add(getAverageBoundingBox(cluster).toRelativeBoundingBox(imageSize))
             }
         }
@@ -249,7 +248,7 @@ class ObjectDetectingTemplate(
                 for ((x1, box1) in allBoxes[y1].withIndex()) {
                     for ((x2, box2) in allBoxes[y2].withIndex()) {
                         val distance = 1 - calculateIoU(box1, box2)
-                        if (distance < similarityThreshold) { // do not include pairs that are not very similar
+                        if (distance < properties.similarityThreshold) { // do not include pairs that are not very similar
                             distances.add(Distance(distance, Pair(x1, y1), Pair(x2, y2)))
                         }
                     }
@@ -295,9 +294,6 @@ class ObjectDetectingTemplate(
 
     companion object {
         const val NO_BOX = -1
-        const val ANSWERS_NEEDED_FOR_EVALUATION = 11
-        const val ADD_DETECTION_DATA_THRESHOLD = 0.6
-        const val SIMILARITY_THRESHOLD = 0.2
     }
 }
 
