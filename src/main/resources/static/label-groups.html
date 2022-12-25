@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>CAPTCHA configuration</title>
+    <title>CzechCaptcha configuration</title>
 
     <script src="https://unpkg.com/vue@3.2.31"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
 
-    <script src="./js/labelgroup.js" type="module" defer></script>
+    <script src="./js/label-groups.js" type="module" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,57 +18,79 @@
 </head>
 <body>
 <header class="page-header">
-    <a href="site-configuration.html"><span class="header-option">Site configuration</span></a>
-    <a href="data-objects.html"><span class="header-option">Data Objects</span></a>
-    <a href="label-groups.html"><span class="header-option selected">Label Groups</span></a>
+    <a href="index.html" class="header-logo">CzechCaptcha</a>
+    <a href="site-configurations.html" class="header-option">Site Configurations</a>
+    <a href="data-objects.html" class="header-option">Data Objects</a>
+    <a href="label-groups.html" class="header-option selected">Label Groups</a>
+    <div class="header-log-in-out">
+        <a href="logout">Log Out</a>
+    </div>
 </header>
-<main id="app">
-    <section>
-        <div class="headline">Label groups</div>
-        <table class="styled-table">
-            <thead>
-            <tr>
-                <th>Label group name</th>
-                <th>Maximal cardinality</th>
-                <th>Range</th>
+<main id="app" class="restricted-width">
+    <button type="button" class="add-button" v-on:click="showNewModal = true">+ New Label Group</button>
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Maximal Cardinality</th>
+            <th>Label Count</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <template v-for="(labelGroup, index) in labelGroups">
+            <tr class="closed-row">
+                <td>{{ labelGroup.name }}</td>
+                <td>{{ labelGroup.maxCardinality }}</td>
+                <td>{{ rangeDisplayCount(labelGroup) }}</td>
+                <td v-if="isRowOpened(index)" v-on:click="toggleRow(index)">&#9650;</td>
+                <td v-else v-on:click="toggleRow(index)">&#9660;</td>
             </tr>
-            </thead>
-            <tbody>
-            <tr v-for="group in labelGroups">
-                <td>{{ group.name }}</td>
-                <td>{{ group.maxCardinality }}</td>
-                <td>{{ rangeDisplayValue(group) }}</td>
+            <tr class="opened-row" v-if="isRowOpened(index)">
+                <td colspan="4">
+                    <h1>Labels</h1>
+                    <p>{{ rangeDisplayValue(labelGroup) }}</p>
+                </td>
             </tr>
-            </tbody>
-        </table>
-    </section>
+        </template>
+        </tbody>
+    </table>
+    <Transition name="modal">
+        <div v-if="showNewModal" class="modal-background">
+            <div class="modal-wrapper">
+                <div class="add-modal-container">
+                    <button class="close modal-close" v-on:click="showNewModal = false"></button>
+                    <form>
+                        <label for="groupName">Name</label>
+                        <div title="Name of the label group, must be unique." class="tooltip"></div>
+                        <input type="text" id="groupName" v-model="groupName">
 
-    <section class="last-section">
-        <div class="headline">Create label group</div>
-        <form>
-            <div class="my-form">
-                <label for="groupName">Name</label>
-                <input type="text" id="groupName" v-model="groupName">
+                        <label for="maxCardinality">Maximal Cardinality</label>
+                        <div title="Maximum number of positive labels from this label group that can be assigned to one object. Minimal value is 1." class="tooltip"></div>
+                        <input type="number" min="1" id="maxCardinality" v-model="maxCardinality">
 
-                <label for="maxCardinality">Maximal cardinality</label>
-                <input type="number" id="maxCardinality" v-model="maxCardinality">
+                        <label for="enteredLabel">Labels</label>
+                        <div title="Labels that will be part of the label group. If none entered the label group will have unlimited label range." class="tooltip"></div>
+                        <ul class="item-list">
+                            <li v-for="(label, index) in labels">
+                                <p>{{ label }}</p>
+                                <button type="button" class="close"
+                                        v-on:click="removeLabel(index)"></button>
+                            </li>
+                        </ul>
+                        <div class="add-item-to-list">
+                            <div>
+                                <input type="text" id="enteredLabel" v-model="enteredLabel">
+                            </div>
+                            <button v-on:click="addLabel()" type="button">+ Add Label</button>
+                        </div>
 
-                <label for="unlimitedRange">Unlimited Range</label>
-                <input type="checkbox" id="unlimitedRange" v-model="unlimitedRange"/>
-            </div>
-
-            <div v-if="!unlimitedRange" class="my-form">
-                <label><button v-on:click="addLabel()" type="button">Add Label</button></label>
-                <input type="text" v-model="enteredLabel">
-                <label>Labels</label>
-                <div class="array-pool">
-                    <div v-for="(label, index) in labels"><span>{{ label }}</span> <button type="button" v-on:click="removeLabel(index)" class="remove-icon fas fa-trash"></button></div>
+                        <button v-on:click="createLabelGroup()" type="button" class="add-modal-add-button">Create Label Group</button>
+                    </form>
                 </div>
             </div>
-
-            <button v-on:click="createLabelGroup()" type="button" class="important-button">Create</button>
-        </form>
-    </section>
+        </div>
+    </Transition>
 </main>
 </body>
 </html>

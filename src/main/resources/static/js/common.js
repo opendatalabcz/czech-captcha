@@ -12,7 +12,31 @@ const ENDPOINTS = {
     objects: OBJECTS_PATH,
     taskTypes: TASKCONFIG_PATH + '/tasks',
     taskTypeSchemas: TASKCONFIG_PATH + '/schemas'
+};
+
+function isTableRowOpened(openedRows, index) {
+    return openedRows.has(index);
 }
 
+function toggleTableRow(openedRows, index) {
+    if (isTableRowOpened(openedRows, index)) {
+        openedRows.delete(index);
+    } else {
+        openedRows.add(index);
+    }
+}
 
-export {ENDPOINTS}
+function isEmptyObject(obj) {
+    return obj
+        && Object.keys(obj).length === 0
+        && Object.getPrototypeOf(obj) === Object.prototype;
+}
+
+function formatToArrayString(array, emptyString) {
+    if (Array.isArray(array)) {
+        return array.length === 0 ? emptyString : array.join(", ");
+    }
+    return array;
+}
+
+export {ENDPOINTS, isTableRowOpened, toggleTableRow, isEmptyObject, formatToArrayString}

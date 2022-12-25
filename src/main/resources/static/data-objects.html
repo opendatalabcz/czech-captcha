@@ -1,133 +1,212 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml"
+      xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>CAPTCHA configuration</title>
+    <title>CzechCaptcha configuration</title>
 
     <script src="https://unpkg.com/vue@3.2.31"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
-
-    <script src="./js/object.js" type="module" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/ajv@6.12.4/dist/ajv.min.js"></script>
+    <script src="./js/data-objects.js" type="module" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-        <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
-
+    <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header class="page-header">
-    <a href="site-configuration.html"><span class="header-option">Site configuration</span></a>
-    <a href="data-objects.html"><span class="header-option selected">Data Objects</span></a>
-    <a href="label-groups.html"><span class="header-option">Label Groups</span></a>
+    <a href="index.html" class="header-logo">CzechCaptcha</a>
+    <a href="site-configurations.html" class="header-option">Site Configurations</a>
+    <a href="data-objects.html" class="header-option selected">Data Objects</a>
+    <a href="label-groups.html" class="header-option">Label Groups</a>
+    <div class="header-log-in-out">
+        <a href="logout">Log Out</a>
+    </div>
 </header>
-<main id="app">
-    <section class="section">
-        <div class="headline">Add object:</div>
-        <form>
-            <div class="my-form">
-                <label for="source">Object source</label>
-                <select name="source" id="source" v-model="source" required>
-                    <option value="">Please select</option>
-                    <option v-for="source in Object.keys(sources)" :value="source">{{ source }}</option>
-                </select>
-            </div>
-            <div v-if="source === sources.URL" class="my-form">
-                <label for="enteredUrl">URL</label>
-<!--                <input type="url" id="enteredUrl" v-model="enteredUrl">-->
-                <input type="url" id="enteredUrl" v-model="enteredUrl" v-on:change="handleChangeUrl()">
-            </div>
-            <div v-if="source === sources.File" class="my-form">
-                <label for="objectFile">File</label>
-                <input type="file" id="objectFile" accept="*/*" ref="objectFile" v-on:change="handleFileUpload()" multiple>
-            </div>
-            <div v-if="source === sources.Directory" class="my-form">
-                <label for="objectDir">Directory</label>
-                <input type="file" id="objectDir" accept="*/*" ref="objectDir" v-on:change="handleDirUpload()" webkitdirectory directory>
-            </div>
-            <div class="my-form">
-                <label for="tag"><button v-on:click="addTag()" type="button">Add tag</button></label>
-                <input id="tag" type="text" v-model="enteredTag">
-                <label>Tags</label>
-                <div class="array-pool">
-                    <div v-for="(tag, index) in tags"><span>{{ tag }}</span> <button type="button" v-on:click="removeTag(index)" class="remove-icon fas fa-trash"></button></div>
-                </div>
-            </div>
-            <div v-if="objectsToUpload.imagesCount > 0" class="my-form">
-                <label for="labelGroup">Label group</label>
-                <input id="labelGroup" type="text" v-model="enteredLabelGroup">
-                <label for="label"><button v-on:click="addLabel()" type="button">Add label</button></label>
-                <input id="label" type="text" v-model="enteredLabel">
-                <label>Labels</label>
-                <div v-for="(labels, labelGroup) in odWantedLabels" class="array-pool">
-                    <div v-for="label in labels">
-                        <span>{{ labelGroup }}->{{ label }}</span> <button type="button" v-on:click="removeLabel(labelGroup, label)" class="remove-icon fas fa-trash"></button>
-                    </div>
-                </div>
+<main id="app" class="restricted-width">
+    <input type="file" id="objectFile" accept="*/*" ref="objectFile" class="hidden"
+           v-on:change="handleFileUpload()" multiple>
+    <input type="file" id="objectDir" accept="*/*" ref="objectDir" class="hidden"
+           v-on:change="handleDirUpload()" webkitdirectory directory>
 
-                <label for="odThreshold1">Object detection threshold 1</label>
-                <input type="number" step="0.01" id="odThreshold1" v-model="odThreshold1"/>
+    <div v-on:mouseover="showNewDropDown = true"
+         v-on:mouseleave="showNewDropDown = false"
+         v-bind:class="showNewDropDown ? 'dropped-btn':''"
+         class="dropdown-btn">
+        <button>+ New Data Object</button>
+        <ul v-if="showNewDropDown">
+            <li v-on:click="selectDataSource(sources.URL)">from URL</li>
+            <li><label for="objectFile">from file</label></li>
+            <li><label for="objectDir">from directory</label></li>
+        </ul>
+    </div>
 
-                <label for="odThreshold2">Object detection threshold 2</label>
-                <input type="number" step="0.01" id="odThreshold2" v-model="odThreshold2"/>
-            </div>
-            <button v-on:click="createObject()" type="button" class="important-button">Add object</button>
-        </form>
-    </section>
-    <section class="section">
-        <table class="styled-table">
-            <tbody>
-                <template v-for="obj in Object.values(objectsToUpload.toUpload)">
-                    <tr>
-                        <td v-if="obj.isUploading"><i class="fa-spinner fa-spin fas"></i></td>
-                        <td v-if="obj.isUploading">Uploading</td>
-                        <td>{{ obj.id }}</td>
-                        <td>{{ obj.objectType }}</td>
-                        <td>{{ obj.sourceType }}</td>
-                        <td><button type="button" v-on:click="objectsToUpload.remove(obj.id)" class="remove-icon fas fa-trash"></button></td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </section>
-    <section class="last-section">
-        <table class="styled-table">
-            <thead>
-            <tr>
-                <th>Object Id</th>
-                <th>Original name</th>
-                <th>Type</th>
-                <th>Owner</th>
-                <th>Repository</th>
-                <th>Path</th>
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Original Name</th>
+            <th>Type</th>
+            <th>Repository Type</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <template v-for="obj in Object.values(objectsToUpload.toUpload)">
+            <tr class="uploading-object" v-if="obj.isUploading">
+                <td><i class="fa-spinner fa-spin fas"></i> Uploading</td>
+                <td>{{ obj.id }}</td>
+                <td>{{ obj.objectType }}</td>
+                <td colspan="2">{{ obj.sourceType }}</td>
             </tr>
-            </thead>
-            <tbody>
-                <template v-for="(object, index) in existingObjects">
-                    <tr v-on:click="toggleRow(index)">
-                        <td>{{ object.storageInfo.id }}</td>
-                        <td>{{ object.storageInfo.originalName }}</td>
-                        <td>{{ object.metadata.objectType.type }}</td>
-                        <td>{{ object.storageInfo.owner }}</td>
-                        <td>{{ object.storageInfo.repositoryType }}</td>
-                        <td>{{ object.storageInfo.path }}</td>
-                    </tr>
-                    <tr v-if="isOpened(index)">
-                        <td colspan="5" class="opened-row">
-                            <div class="small-heading">Tags:</div>
-                            <div class="object-content">{{ object.metadata.tags }}</div>
-                            <div class="small-heading">Labels:</div>
-                            <div class="object-content">{{ object.metadata.labels }}</div>
-                            <div class="small-heading">Template data:</div>
-                            <div class="object-content">{{ object.metadata.templateData }}</div>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </section>
+        </template>
+        <template v-for="(object, index) in existingObjects">
+            <tr class="closed-row" v-on:click="toggleRow(index)">
+                <td>{{ object.storageInfo.id }}</td>
+                <td>{{ object.storageInfo.originalName }}</td>
+                <td>{{ object.metadata.objectType.type.toLowerCase() }}</td>
+                <td>{{ object.storageInfo.repositoryType.toLowerCase() }}</td>
+                <td v-if="isRowOpened(index)">&#9650;</td>
+                <td v-else>&#9660;</td>
+            </tr>
+            <tr class="opened-row" v-if="isRowOpened(index)">
+                <td colspan="5">
+                    <h1>Owner</h1>
+                    <p>{{ object.metadata.owner }}</p>
+                    <h1>Path</h1>
+                    <p>{{ object.storageInfo.path }}</p>
+                    <h1>Tags</h1>
+                    <p>{{ getArrayString(object.metadata.tags) }}</p>
+                    <h1>Labels</h1>
+                    <ul v-if="!isEmptyObject(object.metadata.labels)">
+                        <li v-for="(labelGroup, labelGroupName) in object.metadata.labels">
+                            <i>{{ labelGroupName }}</i>: {{ getLabelGroupString(labelGroup) }}
+                        </li>
+                    </ul>
+                    <p v-else><i>none</i></p>
+                    <h1>Other metadata</h1>
+                    <ul v-if="!isEmptyObject(object.metadata.otherMetadata)">
+                        <li v-for="(value, name) in object.metadata.otherMetadata">
+                            <i>{{ name }}</i>: {{ getArrayString(value) }}
+                        </li>
+                    </ul>
+                    <p v-else><i>none</i></p>
+                </td>
+            </tr>
+        </template>
+        </tbody>
+    </table>
+    <Transition name="modal">
+        <div v-if="showNewModal" class="modal-background">
+            <div class="modal-wrapper">
+                <div class="add-modal-container">
+                    <button class="close modal-close" v-on:click="showNewModal = false"></button>
+                    <form>
+                        <label>Objects to upload</label>
+                        <div title="List of objects that will be uploaded. Rows highlighted with blue background have some annotations associated with them." class="tooltip"></div>
+                        <table class="objects-to-upload">
+                            <template v-for="obj in Object.values(objectsToUpload.toUpload)">
+                                <tr v-if="!obj.isUploading" :class="obj.containsAnnotations() ? 'annotated' : ''">
+                                    <td>
+                                        <i v-if="obj.objectType === objectTypes.Image" class="fas fa-image"></i>
+                                        <i v-else-if="obj.objectType === objectTypes.Sound" class="fas fa-headphones"></i>
+                                        <i v-else class="fas fa-file-alt"></i>
+                                    </td>
+                                    <td>{{ obj.id }}</td>
+                                    <td><button type="button" class="close"
+                                                v-on:click="objectsToUpload.remove(obj.id)"></button></td>
+                                </tr>
+                            </template>
+                        </table>
+
+                        <template v-if="source === sources.URL">
+                            <label for="enteredUrl">URL</label>
+                            <div title="URL address of the object to be added." class="tooltip"></div>
+                            <div class="add-item-to-list">
+                                <div>
+                                    <input type="url" id="enteredUrl" v-model="enteredUrl">
+                                </div>
+                                <button v-on:click="handleUrlAdd()" type="button">+ Add URL</button>
+                            </div>
+                        </template>
+
+                        <label for="enteredTag">Tags</label>
+                        <div title="User tags that will be added to all uploaded objects. Tags serve for better data categorization and searching. Objects with tag 'private' cannot be seen by other users." class="tooltip"></div>
+                        <ul class="item-list">
+                            <li v-for="(tag, index) in tags">
+                                <p>{{ tag }}</p>
+                                <button type="button" class="close"
+                                        v-on:click="removeTag(index)"></button>
+                            </li>
+                        </ul>
+                        <div class="add-item-to-list">
+                            <div>
+                                <input type="text" id="enteredTag" v-model="enteredTag">
+                            </div>
+                            <button v-on:click="addTag()" type="button">+ Add Tag</button>
+                        </div>
+
+                        <template v-if="objectsToUpload.imagesCount > 0">
+                            <label for="addAnnotations">Annotations</label>
+                            <div title="Add annotations for object detection in a COCO format. Category name is equivalent to a label and supercategory to a label group. If none supercategory is provided 'all' is set as a label group." class="tooltip"></div>
+                            <div class="checkbox-line">
+                                <input type="checkbox" id="addAnnotations" v-on:change="changeAddAnnotations()"/>
+                                <label for="addAnnotations">Add annotations to images</label>
+                            </div>
+                            <template v-if="addAnnotations">
+                                <label for="annotationsFile">File with annotations</label>
+                                <div title="File with annotations in COCO JSON format described on cocodataset.org/#format-data. Objects are matched with annotations based on their filenames. Objects with some annotations are highlighted in the Objects to upload overview." class="tooltip"></div>
+                                <input type="file" id="annotationsFile" accept="*/*" ref="annotationsFile" v-on:change="handleAnnotationsUpload()">
+                            </template>
+
+                            <label for="doObjectDetection">Object detection</label>
+                            <div title="Detect specified objects in uploaded images. If a built-in object detection model supports their detection, image cut-outs based on its outputs are saved for later use in the image selection CAPTCHA task. Otherwise, the original image is used in a CAPTCHA task for object detection, in which users will detect the wanted objects." class="tooltip"></div>
+                            <div class="checkbox-line">
+                                <input type="checkbox" id="doObjectDetection" v-model="doObjectDetection"/>
+                                <label for="doObjectDetection">Detect objects in images</label>
+                            </div>
+                            <template v-if="doObjectDetection">
+                                <label for="enteredLabelGroup">Labels wanted to detect</label>
+                                <div title="List of labels that you would like to be detected on the images. Add them in a form of a label group name (first field) and a label name (second field)." class="tooltip"></div>
+                                <ul class="item-list">
+                                    <template v-for="(labels, labelGroup) in odWantedLabels">
+                                        <li v-for="label in labels">
+                                            <p> {{ labelGroup }}&rarr;{{ label }} </p>
+                                            <button type="button" class="close"
+                                                    v-on:click="removeLabel(labelGroup, label)"></button>
+                                        </li>
+                                    </template>
+                                </ul>
+                                <div class="add-item-to-list">
+                                    <div class="two-inputs">
+                                        <input id="enteredLabelGroup" type="text" v-model="enteredLabelGroup">
+                                        <input id="enteredLabel" type="text" v-model="enteredLabel">
+                                    </div>
+                                    <button v-on:click="addLabel()" type="button">+ Add Label</button>
+                                </div>
+
+                                <label for="odThreshold1">Threshold 1 Vote</label>
+                                <div title="When an automatic object detection is done on an image, the model outputs probability of being right between 0 and 1. If the probability exceeds this Threshold 1 the CzechCaptcha will add one vote for the detected label to the image cut-out. This value must be between 0 and 1." class="tooltip"></div>
+                                <input type="number" step="0.01" min="0" max="1" id="odThreshold1" v-model="odThreshold1"/>
+
+                                <label for="odThreshold2">Threshold 2 Votes</label>
+                                <div title="When an automatic object detection is done on an image, the model outputs probability of being right between 0 and 1. If the probability exceeds this Threshold 2 the CzechCaptcha will add two votes for the detected label to the image cut-out. This value must be between 0 and 1 and must be greater than threshold 1." class="tooltip"></div>
+                                <input type="number" step="0.01" min="0" max="1" id="odThreshold2" v-model="odThreshold2"/>
+                            </template>
+                        </template>
+
+                        <button v-on:click="createObject()" type="button" class="add-modal-add-button">{{
+                            getAddDataObjectButtonText() }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </Transition>
 </main>
 </body>
 </html>

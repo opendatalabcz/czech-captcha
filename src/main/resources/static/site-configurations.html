@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>CzechCaptcha configuration</title>
+
+    <script src="https://unpkg.com/vue@3.2.31"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+
+    <script src="./js/site-configurations.js" type="module" defer></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="page-header">
+    <a href="index.html" class="header-logo">CzechCaptcha</a>
+    <a href="site-configurations.html" class="header-option selected">Site Configurations</a>
+    <a href="data-objects.html" class="header-option">Data Objects</a>
+    <a href="label-groups.html" class="header-option">Label Groups</a>
+    <div class="header-log-in-out">
+        <a href="logout">Log Out</a>
+    </div>
+</header>
+<main id="app" class="restricted-width">
+    <button type="button" class="add-button" v-on:click="showNewModal = true; updateTaskSchema()">+ New Site Configuration</button>
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Site Key</th>
+            <th>Task Type</th>
+            <th>Success Threshold</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <template v-for="(config, index) in configs">
+            <tr class="closed-row" v-on:click="toggleRow(index)">
+                <td>{{ config.name }}</td>
+                <td>{{ config.siteKey }}</td>
+                <td>{{ config.taskConfig.taskType }}</td>
+                <td>{{ config.taskConfig.evaluationThreshold }}</td>
+                <td v-if="isRowOpened(index)">&#9650;</td>
+                <td v-else>&#9660;</td>
+            </tr>
+            <tr class="opened-row" v-if="isRowOpened(index)">
+                <td colspan="6">
+                    <h1>Secret Key</h1>
+                    <p>{{ config.secretKey }}</p>
+                    <h1>Generation Configuration</h1>
+                    <ul v-if="!isEmptyObject(config.taskConfig.generationConfig)">
+                        <li v-for="(property, propertyName) in config.taskConfig.generationConfig">
+                            <i>{{ propertyName }}</i>: {{ displayArray(property) }}
+                        </li>
+                    </ul>
+                    <p v-else><i>empty</i></p>
+                    <button v-on:click="deleteConfig(config.siteKey)" class="delete-button">Delete</button>
+                </td>
+            </tr>
+        </template>
+        </tbody>
+    </table>
+    <Transition name="modal">
+        <div v-if="showNewModal" class="modal-background">
+            <div class="modal-wrapper">
+                <div class="add-modal-container">
+                    <button class="close modal-close" v-on:click="showNewModal = false"></button>
+                    <form>
+                        <label for="configName">Name</label>
+                        <div title="Name of the site configuration. Serves only for your distinction." class="tooltip"></div>
+                        <input type="text" id="configName" v-model="configName">
+
+                        <label for="taskType">Task Type</label>
+                        <div title="Type of a task that users will have to pass." class="tooltip"></div>
+                        <select name="taskType" id="taskType" v-model="taskType">
+                            <option v-for="taskTypeOption in taskTypes" :value="taskTypeOption">{{ taskTypeOption }}</option>
+                        </select>
+
+                        <label for="evaluationThreshold">Success threshold</label>
+                        <div title="Every task is evaluated with a score between 0 and 1. If the score is above this success threshold the user is qualified as a human. The threshold must also be between 0 and 1." class="tooltip"></div>
+                        <input type="number" min="0" max="1" step="0.01" id="evaluationThreshold" v-model="evaluationThreshold"/>
+
+                        <div id="generationConfig"></div>
+
+                        <button v-on:click="createSiteConfig()" type="button" class="add-modal-add-button">Create Site Configuration</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </Transition>
+</main>
+</body>
+</html>

@@ -1,20 +1,32 @@
 import {getLabelGroups, createLabelGroup} from "./api.js"
+import {formatToArrayString, isTableRowOpened, toggleTableRow} from "./common.js";
 
 const SiteConfig = {
     data() {
         return {
+            openedRows: new Set(),
+            showNewModal: false,
+
             groupName: '',
             maxCardinality: 1,
-            unlimitedRange: false,
             enteredLabel: "",
             labels: [],
             labelGroups: [],
         }
     },
     methods: {
+        toggleRow(index) { toggleTableRow(this.openedRows, index); },
+        isRowOpened(index) { return isTableRowOpened(this.openedRows, index); },
+        rangeDisplayCount(labelGroup) {
+            return labelGroup.labelRange == null ? "unlimited" : labelGroup.labelRange.length;
+        },
+        rangeDisplayValue(labelGroup) {
+            return labelGroup.labelRange == null ? "unlimited" : formatToArrayString(labelGroup.labelRange, "\u2205");
+        },
         updateLabelGroups() {
             getLabelGroups().then(response => {
-                this.labelGroups = response.data
+                this.labelGroups = response.data;
+                this.openedRows = new Set();
             });
         },
         createLabelGroup() {
@@ -23,12 +35,12 @@ const SiteConfig = {
             }
 
             const labelGroup = {
-                ...(!this.unlimitedRange && {labels: this.labels}),
+                labels: this.labels,
                 name: this.groupName,
                 maxCardinality: this.maxCardinality
             }
 
-            createLabelGroup(labelGroup).then(response => {
+            createLabelGroup(labelGroup).then(_ => {
                 this.updateLabelGroups()
                 this.emptyForm()
             });
@@ -44,19 +56,27 @@ const SiteConfig = {
               this.labels.splice(index, 1);
           }
         },
-        rangeDisplayValue(labelGroup) {
-            return labelGroup.labelRange == null ? 'unlimited' : labelGroup.labelRange
-        },
         emptyForm() {
+            this.showNewModal = false;
             this.groupName = ""
             this.maxCardinality = 1
             this.enteredLabel = ""
             this.labels = []
         },
         validFormInput() {
-            const validRange = this.unlimitedRange || this.labels.length > 1
-
-            return this.maxCardinality >= 1 && !!this.groupName && validRange
+            if (!this.groupName) {
+                alert("Enter label group name.");
+                return false;
+            }
+            if (this.labelGroups.some(group => group.name === this.groupName)) {
+                alert("Label group with name " + this.groupName + " already exists.");
+                return false;
+            }
+            if (this.maxCardinality < 1) {
+                alert("Maximal cardinality of a label group must be at least 1.");
+                return false;
+            }
+            return true;
         }
     },
     mounted() {

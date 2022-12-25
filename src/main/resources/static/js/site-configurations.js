@@ -1,8 +1,12 @@
-import {getConfigs, deleteConfig, getTaskTypes, getTaskTypeSchema, createSiteConfig} from "./api.js"
+import {getConfigs, deleteConfig, getTaskTypes, getTaskTypeSchema, createSiteConfig} from "./api.js";
+import {isTableRowOpened, toggleTableRow, isEmptyObject, formatToArrayString} from "./common.js";
 
-const SiteConfig = {
+const SiteConfigurations = {
     data() {
         return {
+            showNewModal: false,
+            openedRows: new Set(),
+
             configName: '',
             taskType: '',
             evaluationThreshold: 1,
@@ -13,13 +17,18 @@ const SiteConfig = {
         }
     },
     methods: {
+        toggleRow(index) { toggleTableRow(this.openedRows, index); },
+        isRowOpened(index) { return isTableRowOpened(this.openedRows, index); },
+        isEmptyObject(obj) { return isEmptyObject(obj); },
+        displayArray(array) { return formatToArrayString(array, "\u2205"); },
         updateConfigList() {
             getConfigs().then(response => {
-                this.configs = response.data
+                this.configs = response.data;
+                this.openedRows = new Set();
             });
         },
         deleteConfig(siteKey) {
-            deleteConfig(siteKey).then(response => {
+            deleteConfig(siteKey).then(_ => {
                 this.updateConfigList()
             });
         },
@@ -29,7 +38,7 @@ const SiteConfig = {
             }
             const generationConfig = this.generationConfigEditor.getValue()
 
-            createSiteConfig(this.configName, this.taskType, this.evaluationThreshold, generationConfig).then(response => {
+            createSiteConfig(this.configName, this.taskType, this.evaluationThreshold, generationConfig).then(_ => {
                 this.updateConfigList()
             });
             this.emptyForm()
@@ -39,7 +48,6 @@ const SiteConfig = {
             getTaskTypes().then(response => {
                 this.taskTypes = response.data
                 this.taskType = this.taskTypes[0]
-                // this.updateTaskSchema()
             })
         },
         updateTaskSchema() {
@@ -49,32 +57,45 @@ const SiteConfig = {
                 if (this.generationConfigEditor != null) {
                     this.generationConfigEditor.destroy()
                 }
-                // todo set up the form so that it looks a bit better
                 const generationFormElem = document.getElementById('generationConfig')
                 const options = {
                     schema: this.taskSchema,
                     disable_edit_json: true,
                     disable_properties: true,
+                    disable_array_reorder: true,
                     disable_collapse: true,
-                    enable_array_copy: true,
-                    // show_errors: 'change',
-                    // theme: 'bootstrap4'
-                    iconlib: "fontawesome5"
+                    show_errors: 'change',
+                    theme: 'bootstrap4'
                 }
                 this.generationConfigEditor = new JSONEditor(generationFormElem, options);
             });
         },
         emptyForm() {
+            this.showNewModal = false;
             this.configName = '';
             this.evaluationThreshold = 1;
+            this.taskType = this.taskTypes[0];
             this.generationConfigEditor.setValue({});
         },
         validFormInput() {
-            const generationConfigValid = this.generationConfigEditor.validate().length === 0
-            const validThreshold = this.evaluationThreshold >= 0 && this.evaluationThreshold <= 1
-
-            return generationConfigValid && validThreshold &&
-                !!this.configName && !!this.taskType
+            if (!this.configName) {
+                alert("Enter site configuration name.");
+                return false;
+            }
+            if (this.evaluationThreshold < 0 || this.evaluationThreshold > 1) {
+                alert("Evaluation threshold must be between 0 and 1.");
+                return false;
+            }
+            const validateTask = this.generationConfigEditor.validate();
+            if (validateTask.length !== 0) {
+                let message = "Task configuration is not valid: ";
+                for (const error of validateTask) {
+                    message += "\n" + error.path + ": " + error.message;
+                }
+                alert(message);
+                return false;
+            }
+            return true;
         }
     },
     watch: {
@@ -89,4 +110,4 @@ const SiteConfig = {
     }
 }
 
-Vue.createApp(SiteConfig).mount('#app')
+Vue.createApp(SiteConfigurations).mount('#app')
