@@ -25,7 +25,7 @@ class ObjectDetectorKotlinDL(
 
         val detectedObjects = model.detectObjects(tensor)
 
-        return convertToCoordinates(detectedObjects)
+        return mapToDetectedObjects(detectedObjects)
     }
 
     override fun getSupportedLabels(): Set<String> {
@@ -34,7 +34,7 @@ class ObjectDetectorKotlinDL(
         }
     }
 
-    private fun convertToCoordinates(detectedObjects: List<org.jetbrains.kotlinx.dl.api.inference.objectdetection.DetectedObject>): List<DetectedObject> {
+    private fun mapToDetectedObjects(detectedObjects: List<org.jetbrains.kotlinx.dl.api.inference.objectdetection.DetectedObject>): List<DetectedObject> {
         return detectedObjects.map { obj ->
             DetectedObject(
                 obj.classLabel,
