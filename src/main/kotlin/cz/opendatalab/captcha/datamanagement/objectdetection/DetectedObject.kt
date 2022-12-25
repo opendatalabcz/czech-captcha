@@ -1,6 +1,6 @@
 package cz.opendatalab.captcha.datamanagement.objectdetection
 
-import cz.opendatalab.captcha.verification.entities.ImageSize
+import java.awt.image.BufferedImage
 import kotlin.math.max
 import kotlin.math.min
 
@@ -64,5 +64,13 @@ data class AbsoluteBoundingBox(val x: Int, val y: Int, val width: Int, val heigh
         val relW = width.toDouble() / imageSize.width
         val relH = height.toDouble() / imageSize.height
         return RelativeBoundingBox(relX, relY, relW, relH)
+    }
+}
+
+data class ImageSize(val width: Int, val height: Int) {
+    constructor(image: BufferedImage): this (image.width, image.height)
+
+    fun isWidthBigger(): Boolean {
+        return width > height
     }
 }

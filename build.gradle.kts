@@ -29,6 +29,8 @@ dependencies {
 	implementation("io.mongock:mongodb-springdata-v3-driver:5.0.32")
 	implementation("org.springframework:spring-test:5.3.15")
 	implementation("commons-io:commons-io:2.11.0")
+	implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
+	implementation("ch.qos.logback:logback-classic:1.2.6")
 
 	implementation("org.imgscalr:imgscalr-lib:4.2")
 

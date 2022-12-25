@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.verification.entities
 
+import cz.opendatalab.captcha.datamanagement.objectdetection.ImageSize
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 
 interface TaskData {
@@ -22,8 +23,6 @@ data class ImagesWithBoundingBoxes(
     val expectedResult: List<RelativeBoundingBox>,
     val isKnownImageFirst: Boolean
 ): TaskData
-
-data class ImageSize(val width: Int, val height: Int)
 
 enum class ExpectedResult {
     CORRECT, INCORRECT, UNKNOWN

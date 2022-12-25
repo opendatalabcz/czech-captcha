@@ -1,7 +1,7 @@
 package cz.opendatalab.captcha.datamanagement
 
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
-import cz.opendatalab.captcha.verification.entities.ImageSize
+import cz.opendatalab.captcha.datamanagement.objectdetection.ImageSize
 import org.imgscalr.Scalr
 import java.awt.Color
 import java.awt.image.BufferedImage

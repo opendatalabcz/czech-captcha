@@ -378,7 +378,9 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         val labelStatistics = LabelStatistics()
         for ((label, probability) in obj.labelsWithProbability.entries) {
             val votes = calculateVotesFromProbability(probability, twoVotes, oneVote)
-            labelStatistics.statistics[label] = LabelStatistic(votes, abs(votes))
+            if (votes > 0) {
+                labelStatistics.statistics[label] = LabelStatistic(votes, abs(votes))
+            }
         }
         return Labeling(false, emptySet(), emptySet(), labelStatistics)
     }
@@ -388,10 +390,8 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
             2
         } else if (probability > thresholdOneVote) {
             1
-        } else if (probability > 0.0) {
-            0
         } else {
-            -1
+            0
         }
     }
 

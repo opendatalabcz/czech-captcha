@@ -5,6 +5,7 @@ import cz.opendatalab.captcha.datamanagement.ImageUtils
 import cz.opendatalab.captcha.datamanagement.objectmetadata.*
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectService
 import cz.opendatalab.captcha.datamanagement.objectdetection.AbsoluteBoundingBox
+import cz.opendatalab.captcha.datamanagement.objectdetection.ImageSize
 import cz.opendatalab.captcha.datamanagement.objectdetection.RelativeBoundingBox
 import cz.opendatalab.captcha.task.templates.ObjectDetectingGenerationConfig
 import cz.opendatalab.captcha.verification.entities.*
