@@ -7,19 +7,70 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+  <link rel="stylesheet" id="iconlib-link" href="https://use.fontawesome.com/releases/v6.2.1/css/all.css">
 
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="page-header">
+  <header>
     <a href="index.html" class="header-logo">CzechCaptcha</a>
     <div class="header-log-in-out">
       <a href="site-configurations.html">Log In</a>
     </div>
   </header>
-  <main id="app" class="restricted-width">
-    <h1>CzechCaptcha</h1>
+  <main id="app">
+    <div class="centered light-blue">
+      <h1 class="main-title">CzechCaptcha</h1>
+      <h2 class="main-subtitle">open-source free CAPTCHA system</h2>
+    </div>
+    <div class="section">
+      <div class="half-column">
+        <h2><i class="fas fa-shield-alt"></i>Secures your website</h2>
+        <p>
+          CzechCaptcha can secure your web pages from frauds and abuses done by malicious bots for free.
+          It does so by presenting a task that is easy to solve for human users but hard for computers. By securing your
+          website you also help other people annotate their data which can then be used for example to train AI.
+        </p>
+      </div
+      ><div class="half-column list-with-caption">
+      <p>
+        Choose from 4 different configurable CAPTCHA tasks:
+      </p>
+      <ul class="list-with-icons">
+        <li><i class="fas fa-equals"></i>solve equation</li>
+        <li><i class="fas fa-pen"></i>rewrite text</li>
+        <li><i class="fas fa-image"></i>classify images</li>
+        <li><i class="fas fa-shapes"></i>detect objects in image</li>
+        <li><i class="fas fa-code"></i>implement your own task</li>
+      </ul>
+    </div>
+    </div>
+    <div class="section">
+      <div class="half-column">
+        <h2><i class="fas fa-tags"></i>Annotates your Data</h2>
+        <p>
+          CzechCaptcha allows you to have your data annotated by humans for free. It is done by using it in the CAPTCHA
+          tasks. This way the users' precious effort to solve the tasks is transformed into a value in the form of adding
+          labels to images, videos, or sounds. By annotating your data you also help other people protect their websites from malicious bots.
+        </p>
+      </div
+      ><div class="half-column list-with-caption">
+        <p>
+          Annotate your data with custom labels:
+        </p>
+        <ul class="list-with-icons">
+          <li><i class="fas fa-image"></i>classify images</li>
+          <li><i class="fas fa-shapes"></i>detect objects in images</li>
+          <li><i class="fas fa-code"></i>implement your own data annotation mechanism</li>
+        </ul>
+      </div>
+    </div>
   </main>
+  <footer>
+    <div class="restricted-width">
+      <span>Created within <a href="https://opendatalab.cz/"><i class="fas fa-flask"></i> OpenDataLab</a></span>
+      <a href="https://github.com/opendatalabcz/czech-captcha"><i class="fa-brands fa-github"></i> GitHub repository</a>
+    </div>
+  </footer>
 </body>
 </html>
