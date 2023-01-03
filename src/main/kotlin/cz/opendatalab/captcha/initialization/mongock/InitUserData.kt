@@ -8,8 +8,8 @@ import io.mongock.api.annotations.RollbackExecution
 import org.springframework.security.crypto.password.PasswordEncoder
 
 
-@ChangeUnit(id="userdata-initializer", order = "0003", author = "ov")
-class InitUserData(private val userRepo: UserRepository, private val passwordEncoder: PasswordEncoder) {
+@ChangeUnit(id="userdata-initializer", order = "0001", author = "ov")
+class InitUserData(private val repo: UserRepository, private val passwordEncoder: PasswordEncoder) {
     @Execution
     fun changeSet() {
         val admin = UserData("admin",
@@ -21,11 +21,11 @@ class InitUserData(private val userRepo: UserRepository, private val passwordEnc
             setOf("ROLE_USER")
         )
 
-        userRepo.insert(listOf(admin, user))
+        repo.insert(listOf(admin, user))
     }
 
     @RollbackExecution
     fun rollback() {
-        userRepo.deleteAll()
+        repo.deleteAll()
     }
 }
