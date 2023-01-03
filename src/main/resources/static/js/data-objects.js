@@ -114,6 +114,9 @@ class ObjectToUpload {
         this.objectType = getObjectTypeFromFilename(filename);
         this.dto = dto;
         this.isUploading = false;
+        if (this.isImage()) {
+            this.addODField(null, null)
+        }
     }
     upload() {}
     isImage() {
