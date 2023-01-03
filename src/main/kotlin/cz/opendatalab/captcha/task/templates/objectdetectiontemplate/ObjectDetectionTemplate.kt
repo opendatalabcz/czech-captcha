@@ -32,7 +32,7 @@ class ObjectDetectionTemplate(
         val knownImage = odTaskData.knownImage
         val unknownImage = odTaskData.unknownImage
 
-        val expectedResult = knownImage.getOrCreateObjectsDetectionData().getOrCreateODData(labelGroup, label).result
+        val expectedResult = knownImage.retrieveOrCreateObjectsDetectionData().getOrCreateODData(labelGroup, label).result
         val isKnownImageFirst = Random.nextBoolean()
 
         val knownImageSize = getImageSize(knownImage.id)
@@ -40,9 +40,7 @@ class ObjectDetectionTemplate(
         val description = Description("Mark all instances of $label with a rectangle.")
         val taskData = ImagesWithBoundingBoxes(labelGroup, label, unknownImage.id, knownImageSize, expectedResult, isKnownImageFirst)
         val answerSheet = AnswerSheet(
-            ListDisplayData(listOf(
-                ImageDisplayData(objectService.getImageBase64StringById(knownImage.id)),
-                ImageDisplayData(objectService.getImageBase64StringById(unknownImage.id)))),
+            getImagesDisplayData(isKnownImageFirst, knownImage, unknownImage),
             AnswerType.MultipleBoundingBox
         )
 
@@ -58,7 +56,7 @@ class ObjectDetectionTemplate(
         val imagesWithUnknownLabels = mutableMapOf<String, MutableMap<String, ObjectMetadata>>()
 
         for (metadata in images.shuffled()) {
-            val objectsDetectionData = metadata.getObjectsDetectionData()!!
+            val objectsDetectionData = metadata.retrieveObjectsDetectionDataIfPresent()!!
             for ((labelGroup, labels) in objectsDetectionData.objects.entries.shuffled()) {
                 for ((label, odData) in labels.entries.shuffled()) {
                     if (odData.isDetected()) {
@@ -80,22 +78,43 @@ class ObjectDetectionTemplate(
         throw IllegalArgumentException("Images does not contain any label both detected and undetected.")
     }
 
-    override fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult {
-        val objectDetectingAnswer = answer as BoundingBoxesAnswer
-        val data = taskData as ImagesWithBoundingBoxes
+    private fun getImagesDisplayData(
+        isKnownImageFirst: Boolean,
+        known: ObjectMetadata,
+        unknown: ObjectMetadata
+    ): ListDisplayData {
+        val first = if (isKnownImageFirst) known else unknown
+        val second = if (isKnownImageFirst) unknown else known
+        return ListDisplayData(
+            listOf(
+                ImageDisplayData(objectService.getImageBase64StringById(first.id)),
+                ImageDisplayData(objectService.getImageBase64StringById(second.id))
+            )
+        )
+    }
 
-        val verificationResult = evaluateAnswer(objectDetectingAnswer.known, data.expectedResult, data.knownImageSize)
+    override fun evaluateTask(taskData: TaskData, answer: Answer): EvaluationResult {
+        val data = taskData as ImagesWithBoundingBoxes
+        val (knownAnswer, unknownAnswer) = getAnswers(data.isKnownImageFirst, answer as BoundingBoxesAnswer)
+
+        val verificationResult = evaluateAnswer(knownAnswer, data.expectedResult, data.knownImageSize)
 
         if (verificationResult > properties.addDetectionDataThreshold) {
             addDetectionDataToUnknownImage(
                 data.unknownImageId,
                 data.label,
                 data.labelGroup,
-                objectDetectingAnswer.unknown
+                unknownAnswer
             )
         }
 
         return EvaluationResult(verificationResult)
+    }
+
+    private fun getAnswers(isKnownImageFirst: Boolean, answer: BoundingBoxesAnswer): Pair<List<RelativeBoundingBox>, List<RelativeBoundingBox>> {
+        val known = if (isKnownImageFirst) answer.first else answer.second
+        val unknown = if (isKnownImageFirst) answer.second else answer.first
+        return Pair(known, unknown)
     }
 
     private fun evaluateAnswer(

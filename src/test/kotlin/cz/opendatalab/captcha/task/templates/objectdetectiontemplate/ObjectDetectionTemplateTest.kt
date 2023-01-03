@@ -174,8 +174,14 @@ internal class ObjectDetectionTemplateTest {
         val testImage2 = TestImages.getInputStream2().use {
             ImageUtils.getBase64StringWithImage(it.readAllBytes(), jpg)
         }
-        assertEquals(testImage1, (displayData.listData[0] as ImageDisplayData).base64Image)
-        assertEquals(testImage2, (displayData.listData[1] as ImageDisplayData).base64Image)
+        assertEquals(
+            if (taskData.isKnownImageFirst) testImage1 else testImage2,
+            (displayData.listData[0] as ImageDisplayData).base64Image
+        )
+        assertEquals(
+            if (taskData.isKnownImageFirst) testImage2 else testImage1,
+            (displayData.listData[1] as ImageDisplayData).base64Image
+        )
 
         verify { objectMetadataService.getFiltered(user, config.tags, config.owners, ObjectTypeEnum.IMAGE) }
         verify { objectService.getImageById(id2) }
@@ -237,14 +243,17 @@ internal class ObjectDetectionTemplateTest {
 
         val (_, taskData, _) = objectDetectionTemplate.generateTask(config, user)
 
+        val knownAnswer = listOf(
+            AbsoluteBoundingBox(213, 898, 158, 83).toRelativeBoundingBox(testImage1Size),
+            AbsoluteBoundingBox(494, 921, 151, 60).toRelativeBoundingBox(testImage1Size)
+        )
+        val unknownAnswer = listOf(
+            RelativeBoundingBox(0.5, 0.5, 0.5, 0.5)
+        )
+        val taskDataBoxes = (taskData as ImagesWithBoundingBoxes)
         val answer = BoundingBoxesAnswer(
-            listOf(
-                AbsoluteBoundingBox(213, 898, 158, 83).toRelativeBoundingBox(testImage1Size),
-                AbsoluteBoundingBox(494, 921, 151, 60).toRelativeBoundingBox(testImage1Size)
-            ),
-            listOf(
-                RelativeBoundingBox(0.5, 0.5, 0.5, 0.5)
-            )
+            if (taskDataBoxes.isKnownImageFirst) knownAnswer else unknownAnswer,
+            if (taskDataBoxes.isKnownImageFirst) unknownAnswer else knownAnswer
         )
 
         val result = objectDetectionTemplate.evaluateTask(taskData, answer)

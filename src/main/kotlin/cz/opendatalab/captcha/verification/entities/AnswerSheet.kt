@@ -33,7 +33,7 @@ data class TextAnswer(val text: String): Answer()
 
 data class TextListAnswer(val texts: List<String>): Answer()
 
-data class BoundingBoxesAnswer(val known: List<RelativeBoundingBox>, val unknown: List<RelativeBoundingBox>): Answer()
+data class BoundingBoxesAnswer(val first: List<RelativeBoundingBox>, val second: List<RelativeBoundingBox>): Answer()
 
 fun <T : Any>className(clazz: KClass<T>): String {
     return clazz.java.simpleName

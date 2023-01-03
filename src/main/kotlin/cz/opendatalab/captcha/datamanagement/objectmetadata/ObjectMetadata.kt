@@ -58,12 +58,12 @@ data class ObjectMetadata(@Id val id: String,
         return true
     }
 
-    fun getObjectsDetectionData(): ObjectsDetectionData? {
+    fun retrieveObjectsDetectionDataIfPresent(): ObjectsDetectionData? {
         val odData = otherMetadata[ObjectsDetectionData.OTHER_METADATA_NAME] ?: return null
         return odData as ObjectsDetectionData
     }
 
-    fun getOrCreateObjectsDetectionData(): ObjectsDetectionData {
+    fun retrieveOrCreateObjectsDetectionData(): ObjectsDetectionData {
         return otherMetadata.getOrPut(ObjectsDetectionData.OTHER_METADATA_NAME) { ObjectsDetectionData() } as ObjectsDetectionData
     }
 }
