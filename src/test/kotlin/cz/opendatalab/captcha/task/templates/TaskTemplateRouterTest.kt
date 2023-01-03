@@ -1,16 +1,14 @@
 package cz.opendatalab.captcha.task.templates
 
+import cz.opendatalab.captcha.SpringBootTestWithoutMongoDB
 import cz.opendatalab.captcha.verification.entities.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.server.ResponseStatusException
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 internal class TaskTemplateRouterTest(
     @Autowired val router: TaskTemplateRouter
 ) {

@@ -1,14 +1,12 @@
 package cz.opendatalab.captcha.task.taskconfig
 
+import cz.opendatalab.captcha.SpringBootTestWithoutMongoDB
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 internal class TaskConfigServiceTest(
     @Autowired val taskConfigService: TaskConfigService
 ) {

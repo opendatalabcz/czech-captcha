@@ -1,6 +1,7 @@
 package cz.opendatalab.captcha.siteconfig
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import cz.opendatalab.captcha.SpringBootTestWithoutMongoDB
 import cz.opendatalab.captcha.task.templates.EmptyGenerationConfig
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -8,19 +9,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.server.ResponseStatusException
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 internal class SiteConfigServiceTest(
     @Autowired private val siteConfigService: SiteConfigService,
-    @Autowired private val objectMapper: ObjectMapper
+    @Autowired private val objectMapper: ObjectMapper,
+    @Autowired private val siteConfigRepo: SiteConfigRepository
 ) {
-    @MockBean
-    private lateinit var siteConfigRepo: SiteConfigRepository
 
     @Test
     fun getSiteConfigsForUser() {

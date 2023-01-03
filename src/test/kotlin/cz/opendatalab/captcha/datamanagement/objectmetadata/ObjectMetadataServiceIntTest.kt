@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.datamanagement.objectmetadata
 
+import cz.opendatalab.captcha.SpringBootTestWithoutMongoDB
 import cz.opendatalab.captcha.datamanagement.dto.LabelGroupCreateDTO
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -7,23 +8,15 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
 
-
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 internal class ObjectMetadataServiceIntTest(
     @Autowired private val objectMetadataService: ObjectMetadataService,
+    @Autowired private val objectMetadataRepo: ObjectMetadataRepository,
+    @Autowired private val labelRepo: LabelGroupRepository
 ) {
-    @MockBean
-    private lateinit var objectMetadataRepo: ObjectMetadataRepository
-    @MockBean
-    private lateinit var labelRepo: LabelGroupRepository
-
     private final val user1 = "user1"
     private final val user2 = "user2"
     private final val user3 = "user3"

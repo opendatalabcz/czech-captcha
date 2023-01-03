@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.verification
 
+import cz.opendatalab.captcha.SpringBootTestWithoutMongoDB
 import cz.opendatalab.captcha.siteconfig.SiteConfig
 import cz.opendatalab.captcha.siteconfig.SiteConfigRepository
 import cz.opendatalab.captcha.siteconfig.TaskConfig
@@ -12,21 +13,16 @@ import org.junit.jupiter.api.assertThrows
 
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 internal class VerificationOrchestrationServiceTest(
     @Autowired private val verService: VerificationOrchestrationService,
     @Autowired private val taskRepository: KeyValueStore<Task>,
-    @Autowired private val tokenRepository: KeyValueStore<Token>
+    @Autowired private val tokenRepository: KeyValueStore<Token>,
+    @Autowired private val siteConfigRepo: SiteConfigRepository
 ) {
-    @MockBean
-    private lateinit var siteConfigRepo: SiteConfigRepository
 
     @Test
     fun generateTask() {

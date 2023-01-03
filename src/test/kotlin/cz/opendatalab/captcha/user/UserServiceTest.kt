@@ -1,22 +1,17 @@
 package cz.opendatalab.captcha.user
 
+import cz.opendatalab.captcha.SpringBootTestWithoutMongoDB
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.isA
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 
-
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 internal class UserServiceTest(
-    @Autowired private val userService: UserService
+    @Autowired private val userService: UserService,
+    @Autowired private val userRepository: UserRepository
 ) {
-    @MockBean
-    private lateinit var userRepository: UserRepository
 
     @Test
     fun `userExists exists`() {

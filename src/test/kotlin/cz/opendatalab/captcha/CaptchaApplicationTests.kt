@@ -1,11 +1,8 @@
 package cz.opendatalab.captcha
 
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTestWithoutMongoDB
 class CaptchaApplicationTests() {
 	@Test
 	fun contextLoads() {
