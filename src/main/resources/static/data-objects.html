@@ -164,7 +164,7 @@
                             </template>
 
                             <label for="doObjectDetection">Object detection</label>
-                            <div title="Detect specified objects in uploaded images. If a built-in object detection model supports their detection, image cut-outs based on its outputs are saved for later use in the image selection CAPTCHA task. Otherwise, the original image is used in a CAPTCHA task for object detection, in which users will detect the wanted objects." class="tooltip"></div>
+                            <div title="Detect specified objects in uploaded images. If a built-in object detection model supports their detection, image cut-outs based on its outputs are saved for later use in the image selection CAPTCHA task. Otherwise, the original image is used in a CAPTCHA task for object detection, in which users will detect the wanted objects. Built-in object detection model detects only labels in 'object_detection' label group." class="tooltip"></div>
                             <div class="checkbox-line">
                                 <input type="checkbox" id="doObjectDetection" v-model="doObjectDetection"/>
                                 <label for="doObjectDetection">Detect objects in images</label>
