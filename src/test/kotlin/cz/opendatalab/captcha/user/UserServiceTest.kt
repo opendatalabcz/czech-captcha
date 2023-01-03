@@ -13,11 +13,10 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest
 @ActiveProfiles("test")
 internal class UserServiceTest(
-    @Autowired val userService: UserService,
-    @Autowired @MockBean val userRepository: UserRepository
+    @Autowired private val userService: UserService
 ) {
-
-
+    @MockBean
+    private lateinit var userRepository: UserRepository
 
     @Test
     fun `userExists exists`() {

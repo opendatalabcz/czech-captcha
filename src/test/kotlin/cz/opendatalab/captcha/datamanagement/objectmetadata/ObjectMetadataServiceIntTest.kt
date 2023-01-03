@@ -16,10 +16,14 @@ import java.util.*
 
 @SpringBootTest
 @ActiveProfiles("test")
-internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService: ObjectMetadataService,
-                                            @MockBean @Autowired val objectMetadataRepo: ObjectMetadataRepository,
-                                            @MockBean @Autowired val labelRepo: LabelGroupRepository
-                                         ) {
+internal class ObjectMetadataServiceIntTest(
+    @Autowired private val objectMetadataService: ObjectMetadataService,
+) {
+    @MockBean
+    private lateinit var objectMetadataRepo: ObjectMetadataRepository
+    @MockBean
+    private lateinit var labelRepo: LabelGroupRepository
+
     private final val user1 = "user1"
     private final val user2 = "user2"
     private final val user3 = "user3"
@@ -97,6 +101,7 @@ internal class ObjectMetadataServiceIntTest(@Autowired val objectMetadataService
 
         val labelGroupCreateDTO = LabelGroupCreateDTO(labelGroupName, emptySet(), maxCardinality)
         `when`(labelRepo.existsByName(labelGroupName)).thenReturn(false)
+        `when`(labelRepo.insert(expected)).thenReturn(expected)
 
 
         objectMetadataService.createLabelGroup(labelGroupCreateDTO)

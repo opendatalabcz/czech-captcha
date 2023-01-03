@@ -16,10 +16,11 @@ import org.springframework.web.server.ResponseStatusException
 @SpringBootTest
 @ActiveProfiles("test")
 internal class SiteConfigServiceTest(
-    @Autowired val siteConfigService: SiteConfigService,
-    @MockBean @Autowired val siteConfigRepo: SiteConfigRepository,
-    @Autowired val objectMapper: ObjectMapper
-    ) {
+    @Autowired private val siteConfigService: SiteConfigService,
+    @Autowired private val objectMapper: ObjectMapper
+) {
+    @MockBean
+    private lateinit var siteConfigRepo: SiteConfigRepository
 
     @Test
     fun getSiteConfigsForUser() {

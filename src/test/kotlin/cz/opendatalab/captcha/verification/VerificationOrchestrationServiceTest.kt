@@ -21,11 +21,12 @@ import java.time.Instant
 @SpringBootTest
 @ActiveProfiles("test")
 internal class VerificationOrchestrationServiceTest(
-    @Autowired val verService: VerificationOrchestrationService,
-    @MockBean @Autowired val siteConfigRepo: SiteConfigRepository,
-    @Autowired val taskRepository: KeyValueStore<Task>,
-    @Autowired val tokenRepository: KeyValueStore<Token>
-    ) {
+    @Autowired private val verService: VerificationOrchestrationService,
+    @Autowired private val taskRepository: KeyValueStore<Task>,
+    @Autowired private val tokenRepository: KeyValueStore<Token>
+) {
+    @MockBean
+    private lateinit var siteConfigRepo: SiteConfigRepository
 
     @Test
     fun generateTask() {
