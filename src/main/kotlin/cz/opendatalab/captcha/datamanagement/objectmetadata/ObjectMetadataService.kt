@@ -123,7 +123,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         }
     }
 
-    fun createLabelGroup(labelGroupCreate: LabelGroupCreateDTO) {
+    fun createLabelGroup(labelGroupCreate: LabelGroupCreateDTO): LabelGroup {
         if (labelGroupCreate.maxCardinality <= 0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group max cardinality must be positive number, found ${labelGroupCreate.maxCardinality}")
         }
@@ -137,7 +137,7 @@ class ObjectMetadataService(private val objectMetadataRepo: ObjectMetadataReposi
         if (labelGroupRepo.existsByName(labelGroup.name)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Label group with name ${labelGroupCreate.name} already exists")
         }
-        labelGroupRepo.insert(labelGroup)
+        return labelGroupRepo.insert(labelGroup)
     }
 
     fun labelObject(objectId: String, labelGroupName: String, label: String, positiveLabel: Boolean = true) {

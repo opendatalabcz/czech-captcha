@@ -20,7 +20,10 @@ import java.net.URI
 
 @RestController
 @RequestMapping("api/datamanagement/objects")
-class ObjectController(val metadataService: ObjectMetadataService, val objectService: ObjectService) {
+class ObjectController(
+    private val metadataService: ObjectMetadataService,
+    private val objectService: ObjectService
+    ) {
 
     @GetMapping
     fun getDataObjects(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<DataObjectDTO> {
@@ -38,7 +41,7 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
     }
 
     @GetMapping("metadata")
-    fun getObjectMetadata(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<ObjectMetadata> {
+    fun getAllObjectMetadata(@AuthenticationPrincipal @Parameter(hidden = true) user: UserDetails): List<ObjectMetadata> {
         return metadataService.getAllAccessible(user.username)
     }
 
@@ -74,13 +77,20 @@ class ObjectController(val metadataService: ObjectMetadataService, val objectSer
     }
 
     @GetMapping("labelgroups")
-    fun getLabelGroup(): List<LabelGroup> {
+    fun getLabelGroups(): List<LabelGroup> {
         return metadataService.getLabelGroups()
     }
 
+    @GetMapping("labelgroups/{name}")
+    fun getLabelGroup(@PathVariable name: String): LabelGroup {
+        return metadataService.getLabelGroup(name)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Labelgroup $name not found.")
+    }
+
     @PostMapping("labelgroups")
-    fun createLabelGroup(@RequestBody labelGroup: LabelGroupCreateDTO) {
-        return metadataService.createLabelGroup(labelGroup)
+    fun createLabelGroup(@RequestBody labelGroup: LabelGroupCreateDTO): ResponseEntity<Unit> {
+        val created = metadataService.createLabelGroup(labelGroup)
+        return ResponseEntity.created(URI.create("api/datamanagement/objects/labelGroup/${created.name}")).build()
     }
 }
 
@@ -95,7 +105,8 @@ class ObjectAdminController(val metadataService: ObjectMetadataService,
 
     @GetMapping("storageinfo/{objectId}")
     fun getObjectInfo(@PathVariable objectId: String): ObjectStorageInfo {
-        return objectStorageInfoRepository.findByIdOrNull(objectId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found")
+        return objectStorageInfoRepository.findByIdOrNull(objectId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Object with id $objectId not found")
     }
 
     @GetMapping("storageinfo")
