@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha
 
+import cz.opendatalab.captcha.datamanagement.objectdetection.ObjectDetectorKotlinDL
 import cz.opendatalab.captcha.datamanagement.objectmetadata.LabelGroupRepository
 import cz.opendatalab.captcha.datamanagement.objectmetadata.ObjectMetadataRepository
 import cz.opendatalab.captcha.datamanagement.objectstorage.ObjectStorageInfoRepository
@@ -25,4 +26,5 @@ class RepositoriesTestConfig {
     @MockBean lateinit var siteConfigRepository: SiteConfigRepository
     @MockBean lateinit var userRepository: UserRepository
     @MockBean lateinit var labelGroupRepository: LabelGroupRepository
+    @MockBean lateinit var objectDetectorKotlinDL: ObjectDetectorKotlinDL
 }

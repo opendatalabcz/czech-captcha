@@ -278,15 +278,18 @@ internal class ObjectDetectionTemplateTest {
 
         val (_, taskData, _) = objectDetectionTemplate.generateTask(config, user)
 
+        val knownAnswer = listOf(
+            AbsoluteBoundingBox(213, 898, 158, 83).toRelativeBoundingBox(testImage1Size),
+            AbsoluteBoundingBox(494, 921, 151, 60).toRelativeBoundingBox(testImage1Size),
+            AbsoluteBoundingBox(50, 50, 50, 50).toRelativeBoundingBox(testImage1Size)
+        )
+        val unknownAnswer = listOf(
+            AbsoluteBoundingBox(408, 240, 101, 139).toRelativeBoundingBox(testImage2Size), // object 1
+        )
+        val taskDataBoxes = (taskData as ImagesWithBoundingBoxes)
         val answer = BoundingBoxesAnswer(
-            listOf(
-                AbsoluteBoundingBox(213, 898, 158, 83).toRelativeBoundingBox(testImage1Size),
-                AbsoluteBoundingBox(494, 921, 151, 60).toRelativeBoundingBox(testImage1Size),
-                AbsoluteBoundingBox(50, 50, 50, 50).toRelativeBoundingBox(testImage1Size)
-            ),
-            listOf(
-                AbsoluteBoundingBox(408, 240, 101, 139).toRelativeBoundingBox(testImage2Size), // object 1
-            )
+            if (taskDataBoxes.isKnownImageFirst) knownAnswer else unknownAnswer,
+            if (taskDataBoxes.isKnownImageFirst) unknownAnswer else knownAnswer
         )
 
         val result = objectDetectionTemplate.evaluateTask(taskData, answer)

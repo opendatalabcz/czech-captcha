@@ -25,7 +25,7 @@ internal class TaskConfigServiceTest(
 
     @Test
     fun `getTaskConfigSchema concrete schema`() {
-        val taskName = "TEST_TASK"
+        val taskName = "test_task"
 
         val expectedTitle = "Test Generation configuration"
 
