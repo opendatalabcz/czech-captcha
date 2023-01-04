@@ -1,6 +1,7 @@
 package cz.opendatalab.captcha.datamanagement.objectdetection
 
 import cz.opendatalab.captcha.TestImages
+import mu.KotlinLogging
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -25,11 +26,17 @@ internal class ObjectDetectorKotlinDLTest {
 
     companion object {
         private val cachePath = Paths.get(System.getProperty("java.io.tmpdir"), "czech-captcha")
+        private val logger = KotlinLogging.logger {}
 
         @AfterAll
         @JvmStatic
         private fun removeCache() {
-            FileSystemUtils.deleteRecursively(cachePath)
+            logger.info("Deleting directory with object detection model after tests.")
+            try {
+                FileSystemUtils.deleteRecursively(cachePath)
+            } catch (e: Exception) {
+                logger.warn("Could not delete directory with OD cache.", e)
+            }
         }
     }
 }

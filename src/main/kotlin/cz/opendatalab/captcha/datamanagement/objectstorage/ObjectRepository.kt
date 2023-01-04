@@ -10,6 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import kotlin.io.path.isDirectory
 
 @Repository
 class ObjectRepository(
@@ -72,12 +73,6 @@ class FilesystemObjectRepository(
 ): ObjectRepositoryInterface {
     private val dataPath: Path = Paths.get(properties.dataPath)
 
-    init {
-        if ( ! Files.isDirectory(dataPath) ) {
-            Files.createDirectories(dataPath)
-        }
-    }
-
     override fun getFile(path: String): InputStream {
         val filePath = findFileInBalancedDirs(dataPath, path) ?:
             throw FileNotFoundException("Cannot find file $path in ${properties.dataPath} or any subdirectories.")
@@ -85,8 +80,15 @@ class FilesystemObjectRepository(
     }
 
     override fun saveFile(content: InputStream, name: String): String {
+        createDataPathIfNotDirectory()
         saveFileBalancingDirs(content, dataPath, name)
         return name
+    }
+
+    private fun createDataPathIfNotDirectory() {
+        if (!Files.isDirectory(dataPath)) {
+            Files.createDirectories(dataPath)
+        }
     }
 
     override fun removeFile(path: String) {
@@ -136,6 +138,9 @@ class FilesystemObjectRepository(
     }
 
     private fun findFileInBalancedDirs(dir: Path, filename: String): Path? {
+        if (!dir.isDirectory()) {
+            return null
+        }
         val subDirName = filename[0].toString()
         val subFilename = filename.substring(1)
         val subDir = dir.resolve(subDirName)
@@ -143,7 +148,7 @@ class FilesystemObjectRepository(
             return findFileInBalancedDirs(subDir, subFilename)
         }
         val filePath = dir.resolve(filename)
-        if ( Files.isRegularFile(filePath) ) {
+        if (Files.isRegularFile(filePath)) {
             return filePath
         }
         return null

@@ -1,5 +1,6 @@
 package cz.opendatalab.captcha.datamanagement.objectstorage
 
+import mu.KotlinLogging
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -13,6 +14,7 @@ import java.nio.file.Paths
 import kotlin.io.path.isRegularFile
 
 internal class ObjectRepositoryTest {
+    private val logger = KotlinLogging.logger {}
     private val dataPath = "test-save"
     private val maxFilesPerDir = 5
     private val properties = FilesystemRepositoryProperties(dataPath, maxFilesPerDir)
@@ -28,7 +30,11 @@ internal class ObjectRepositoryTest {
 
     @AfterEach
     private fun deleteTestDirsAndFiles() {
-        FileSystemUtils.deleteRecursively(Paths.get(properties.dataPath))
+        try {
+            FileSystemUtils.deleteRecursively(Paths.get(properties.dataPath))
+        } catch (e: Exception) {
+            logger.warn("Could not delete directory with files created during tests.", e)
+        }
     }
 
     @Test
