@@ -57,6 +57,10 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	if (project.hasProperty("runs-in-docker")) {
+		exclude("**/ObjectControllerTest*") // cannot run MongoDB testcontainer during docker build
+	}
+	testLogging.showExceptions = true
 }
 
 tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {

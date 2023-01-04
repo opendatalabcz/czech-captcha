@@ -6,12 +6,12 @@ verification:
 
 datamanagement:
   filesystem:
-    data-path: ~/programs/czech-captcha/saved-files
+    data-path: ./czech-captcha/saved-files
     max-files-per-dir: 10000
   image:
     max-size: 1024
   objectdetection:
-    cache-path: ~/programs/czech-captcha/od-cache
+    cache-path: ./czech-captcha/od-cache
 
 task:
   templates:

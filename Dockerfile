@@ -1,8 +1,9 @@
-FROM openjdk:11-jdk-slim as builder
+# syntax = docker/dockerfile:1.2
+FROM openjdk:11-jdk as builder
 USER root
 WORKDIR /builder
 ADD . /builder
-RUN ./gradlew build --info --stacktrace
+RUN ./gradlew build --info --stacktrace -Pruns-in-docker
 
 FROM openjdk:11-jre-slim
 WORKDIR /app

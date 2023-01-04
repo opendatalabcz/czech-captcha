@@ -2,6 +2,8 @@ services:
   captcha:
     build: .
     image: captcha
+    volumes:
+      - ${DATA_OBJECTS_STORAGE_PATH}:/app/czech-captcha
     ports:
       - "8080:8080"
     depends_on:
